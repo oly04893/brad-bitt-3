@@ -113,24 +113,30 @@ function initPool(){
   if(!S.usedEvents)S.usedEvents=[];
   if(!S.usedSgIds)S.usedSgIds=[];
   [1,2,3,4,5].forEach(n=>{
-    if(S.pool[n]===undefined)S.pool[n]=(PHASES[n]?.gages||[]).map(g=>g.id);
+    // JSON parse makes keys strings, handle both
+    if(S.pool[n]===undefined&&S.pool[String(n)]===undefined){
+      S.pool[n]=(PHASES[n]?.gages||[]).map(g=>g.id);
+    } else if(S.pool[String(n)]!==undefined&&S.pool[n]===undefined){
+      S.pool[n]=S.pool[String(n)];
+    }
   });
 }
+function getPool(ph){return S.pool[ph]||S.pool[String(ph)]||[];}
 function getGageById(id){
   for(const ph of PHASES){const g=ph.gages?.find(x=>x.id===id);if(g)return g;}
   return SECONDARY_GAGES.find(g=>g.id===id)||null;
 }
 function drawFromPool(phase,excludeId=null){
-  if(!S.pool[phase])return null;
-  const av=S.pool[phase].filter(id=>id!==excludeId);
+  const pool=getPool(phase);
+  const av=pool.filter(id=>id!==excludeId);
   if(!av.length)return null;
   const gid=av[Math.floor(Math.random()*av.length)];
-  S.pool[phase]=S.pool[phase].filter(id=>id!==gid);
+  S.pool[phase]=pool.filter(id=>id!==gid);
   return gid;
 }
 function returnToPool(phase,gageId){
-  if(!S.pool[phase])S.pool[phase]=[];
-  if(!S.pool[phase].includes(gageId))S.pool[phase].push(gageId);
+  const pool=getPool(phase);
+  if(!pool.includes(gageId)){S.pool[phase]=[...pool,gageId];}
 }
 function addActiveGage(gageId,playerIdx){
   const g=getGageById(gageId);if(!g)return;
@@ -269,11 +275,12 @@ async function activate(){
 document.getElementById('btn-proto').addEventListener('click',async()=>{flash(90);glitchSnd(.1);shake(4,180);await wait(280);setPh('p5');startCD();});
 document.getElementById('btn-skip-cd').addEventListener('click',async()=>{clearInterval(cdTimer);flash(90);glitchSnd(.1);await wait(200);setPh('p6');});
 document.getElementById('btn-action').addEventListener('click',async()=>{glitchSnd(.15);flash(140);shake(5,280);await wait(380);setPh('p7');document.getElementById('yt-frame').src=`https://www.youtube.com/embed/${CFG.youtubeId}?autoplay=1&rel=0&modestbranding=1`;setTimeout(()=>{document.getElementById('btn-enter-app').style.opacity='1';},8000);});
-document.getElementById('btn-enter-app').addEventListener('click',enterApp);
-function enterApp(){S.introComplete=true;save();document.getElementById('yt-frame').src='about:blank';document.querySelectorAll('.ph').forEach(p=>p.classList.remove('on'));document.getElementById('app').classList.add('show');initApp();}
+document.getElementById('btn-enter-app').addEventListener('click',()=>enterApp());
 
 
 /* MAP */
+const ZONES=[{id:'alpha',name:'ZONE ALPHA',x:18,y:22,ph:0},{id:'beta',name:'ZONE BETA',x:68,y:38,ph:1},{id:'gamma',name:'ZONE GAMMA',x:32,y:60,ph:2},{id:'delta',name:'ZONE DELTA',x:72,y:68,ph:3},{id:'omega',name:'[ CLASSIFIE ]',x:50,y:47,ph:5}];
+
 function initMap(){
   const c=document.getElementById('zones-container');c.innerHTML='';
   let mapPanel=null;
@@ -354,7 +361,7 @@ function renderGages(){
   }
 
   // AVAILABLE GAGES
-  const poolGages=(S.pool[S.phase]||[]).map(id=>getGageById(id)).filter(Boolean);
+  const poolGages=(getPool(S.phase)).map(id=>getGageById(id)).filter(Boolean);
   if(poolGages.length||ph.directAssignment){
     if(!ph.directAssignment&&poolGages.length)html+=`<div class="section-lbl">DISPONIBLES</div>`;
     if(ph.directAssignment&&poolGages.length)html+=`<div class="section-lbl">DISPONIBLES — ATTRIBUTION BRAD</div>`;
@@ -411,7 +418,7 @@ function renderGages(){
     card.addEventListener('click',()=>{
       const gid=card.dataset.gid,g=getGageById(gid);if(!g)return;
       if(ph.directAssignment){
-        S.pool[S.phase]=(S.pool[S.phase]||[]).filter(id=>id!==gid);
+        S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gid);
         const pidx=Math.floor(Math.random()*4);
         addActiveGage(gid,pidx);save();renderGages();flash(100,true);
         bradMsg(`Mission "${g.name}" attribuee a ${DISPLAY_NAMES[pidx]}. Le BRADDY3000 a decide.`);
@@ -552,7 +559,7 @@ function spinRoulette(){
 function startMissionFromRoulette(){
   if(!rCurrentGage||rWinnerIdx<0)return;
   document.getElementById('roulette-ol').classList.add('hidden');
-  S.pool[S.phase]=(S.pool[S.phase]||[]).filter(id=>id!==rCurrentGage.id);
+  S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==rCurrentGage.id);
   addActiveGage(rCurrentGage.id,rWinnerIdx);
   save();renderGages();showPage('gages');
   setTimeout(()=>bradMsg(`Mission "${rCurrentGage.name}" attribuee a ${DISPLAY_NAMES[rWinnerIdx]}. Elle apparait dans la section "En cours".`),400);
@@ -730,7 +737,7 @@ let dt2Spinning=false,dt2Gage1=null,dt2Gage2=null,dt2Player1=-1,dt2Player2=-1;
 let dt2Angle1=0,dt2Angle2=0;
 
 function openDoubleTimbre(){
-  const pool=(S.pool[S.phase]||[]);
+  const pool=(getPool(S.phase));
   if(pool.length<2){bradMsg("Pas assez de gages disponibles pour le Double Tirage. Minimum 2 gages requis.");return;}
   const ol=document.getElementById('dt2-ol');ol.classList.remove('hidden');
   document.getElementById('dt2-result').classList.add('hidden');
@@ -780,7 +787,7 @@ function spinDoubleTimbre(){
 /* IMPOSER UN GAGE */
 let imposerPayerKey=null,imposerTargetIdx=-1;
 function openImposer(){
-  const pool=(S.pool[S.phase]||[]);
+  const pool=(getPool(S.phase));
   if(!pool.length){bradMsg("Aucun gage disponible a imposer dans cette phase.");return;}
   const ol=document.getElementById('imposer-ol');ol.classList.remove('hidden');
   document.getElementById('imposer-step1').classList.remove('hidden');
@@ -798,7 +805,7 @@ function openImposer(){
       gagesEl.querySelectorAll('.imposer-gage-btn').forEach(gb=>{
         gb.addEventListener('click',()=>{
           const gid=gb.dataset.gid;
-          S.pool[S.phase]=(S.pool[S.phase]||[]).filter(id=>id!==gid);
+          S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gid);
           addActiveGage(gid,imposerTargetIdx);save();
           ol.classList.add('hidden');renderGages();
           const g=getGageById(gid);
@@ -856,12 +863,12 @@ function cancelPurch(){selPl=null;document.getElementById('purchase-confirm').cl
 function showFb(msg,err){const el=document.getElementById('purch-feedback');el.textContent=msg;el.className=err?'err':'ok';el.classList.remove('hidden');}
 
 function openMission(gage,playerIdx){
-  S.pool[S.phase]=(S.pool[S.phase]||[]).filter(id=>id!==gage.id);
+  S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gage.id);
   addActiveGage(gage.id,playerIdx);save();renderGages();showPage('gages');
 }
 
 /* APP INIT */
-function initApp(){
+function initApp(){try{
   initPool();startClock();startBradStatus();initMap();renderGages();renderBraddy();renderDossiers();updateBadge();
   if(!S.chatHistory||S.chatHistory.length===0){setTimeout(()=>bradMsg("Ah. Vous voila enfin. Le BRADDY3000 vous attendait. Moi aussi, je suppose."),1500);}else{renderHistory();}
   document.getElementById('topbar-chat').addEventListener('click',()=>nav('chat'));
@@ -885,7 +892,7 @@ function initApp(){
   document.getElementById('dt2-cancel-btn').addEventListener('click',()=>document.getElementById('dt2-ol').classList.add('hidden'));
   document.getElementById('imposer-close').addEventListener('click',()=>document.getElementById('imposer-ol').classList.add('hidden'));
   showPage(S.lastView||'home');
-}
+}catch(e){console.error('initApp crash:',e);}}
 
 /* NAV */
 let navStack=['home'];
