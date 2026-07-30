@@ -447,7 +447,11 @@ function renderGages(){
       const gid=card.dataset.gid,g=getGageById(gid);if(!g)return;
       if(ph.directAssignment){
         S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gid);
-        const pidx=Math.floor(Math.random()*4);
+        const excl=S.phaseExcluded||[];const usedKeys=(S.activeGages||[]).filter(ag=>ag.phase===S.phase).map(ag=>R_KEYS[ag.playerIdx]);
+        const combined=[...new Set([...excl,...usedKeys])];
+        const avail=R_KEYS.filter(k=>!combined.includes(k));
+        const pk=avail.length?avail[Math.floor(Math.random()*avail.length)]:R_KEYS[Math.floor(Math.random()*4)];
+        const pidx=R_KEYS.indexOf(pk);
         addActiveGage(gid,pidx);save();renderGages();flash(100,true);
         bradMsg(`Mission "${g.name}" attribuee a ${DISPLAY_NAMES[pidx]}. Le BRADDY3000 a decide.`);
       } else {openRoulette(g);}
@@ -908,7 +912,7 @@ function openBonus(id){
   }
 }
 
-const BONUS_INFO={gageSecondaire:{title:'Gage secondaire',desc:'Un gage de secours si celui actuel ne convient pas. Visible sur la carte de gage active.'},refaireRoue:{title:'Refaire la roue',desc:'Retirer un nouveau gage. Visible sur la carte de gage active.'},laisserPasser:{title:'Laisser Passer',desc:'Ignorer un gage sans penalite. Visible sur la carte de gage active.'},doubleTimbre:{title:'Double Tirage',desc:'Deux gages tires simultanement. Deux fois plus de chaos.'},imposerGage:{title:'Imposer un Gage',desc:'Impose un gage supplementaire a la personne de votre choix.'},declencherEvenement:{title:'Declencher un evenement',desc:'Active un evenement special via une roue dedicee.'}};
+const BONUS_INFO={gageSecondaire:{title:'Gage secondaire',desc:'Un gage de secours si celui actuel ne convient pas. Visible sur la carte de gage active.'},refaireRoue:{title:'Refaire la roue',desc:'Retirer un nouveau gage. Visible sur la carte de gage active.'},laisserPasser:{title:'Laisser Passer',desc:'Ignorer un gage sans penalite. Visible sur la carte de gage active.'},doubleTimbre:{title:'Mission Parallele',desc:'Attribue une mission annexe aleatoire en parallele de votre gage principal. +5 BC si reussie.'},imposerGage:{title:'Imposer une Mission',desc:'Assigne une mission annexe aleatoire a un autre joueur. +5 BC si reussie.'},declencherEvenement:{title:'Declencher un evenement',desc:'Active un evenement special via une roue dedicee.'}};
 let curBonus=null,selPl=null;
 function selPlayer(p){if(!curBonus)return;const cost=CFG.costs[curBonus]?.[p]||0,stock=S.stock[curBonus]?.[p]??0,coins=S.coins[p]||0;if(stock<=0||coins<cost)return;selPl=p;document.querySelectorAll('.player-btn').forEach(b=>b.classList.remove('selected'));document.querySelector(`.player-btn[data-player="${p}"]`)?.classList.add('selected');const names={hippolyte:'Hippolyte',nathanael:'Nathanael',edwin:'Edwin',teo:'Teo'};document.getElementById('purch-name').textContent=names[p];document.getElementById('purchase-confirm').classList.remove('hidden');document.getElementById('purch-feedback').classList.add('hidden');}
 function confirmPurch(){
@@ -933,6 +937,7 @@ function openMission(gage,playerIdx){
 
 /* APP INIT */
 function initApp(){try{
+  initAudio();document.addEventListener('click',()=>{if(AC&&AC.state==='suspended')AC.resume();});
   initPool();startClock();startBradStatus();initMap();renderGages();renderBraddy();renderDossiers();updateBadge();
   if(!S.chatHistory||S.chatHistory.length===0){setTimeout(()=>bradMsg("Ah. Vous voila enfin. Le BRADDY3000 vous attendait. Moi aussi, je suppose."),1500);}else{renderHistory();}
   document.getElementById('topbar-chat').addEventListener('click',()=>nav('chat'));
@@ -948,7 +953,13 @@ function initApp(){try{
   document.getElementById('roll-pre-close').addEventListener('click',()=>document.getElementById('roulette-ol').classList.add('hidden'));
   document.getElementById('roll-btn').addEventListener('click',spinRoulette);
   document.getElementById('roll-start-btn').addEventListener('click',startMissionFromRoulette);
-  document.getElementById('roll-close-btn').addEventListener('click',()=>document.getElementById('roulette-ol').classList.add('hidden'));
+  document.getElementById('roll-close-btn').addEventListener('click',()=>{
+    if(rWinnerIdx>=0&&rCurrentGage){
+      S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==rCurrentGage.id);
+      addActiveGage(rCurrentGage.id,rWinnerIdx);save();renderGages();
+    }
+    document.getElementById('roulette-ol').classList.add('hidden');
+  });
   document.getElementById('ev-spin-btn').addEventListener('click',spinEventWheel);
   document.getElementById('ev-close-btn').addEventListener('click',()=>document.getElementById('ev-ol').classList.add('hidden'));
   document.getElementById('dt2-spin-btn').addEventListener('click',spinDoubleTimbre);
@@ -962,7 +973,7 @@ function initApp(){try{
 let navStack=['home'];
 function nav(to){navStack.push(to);showPage(to);}
 function goBack(){if(navStack.length>1)navStack.pop();showPage(navStack[navStack.length-1]);}
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));const p=document.getElementById('page-'+name);if(p)p.classList.add('on');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));S.lastView=name;save();if(name==='chat'){S.chatBadge=0;save();updateBadge();setTimeout(()=>{const m=document.getElementById('chat-msgs');if(m)m.scrollTop=m.scrollHeight;},80);}}
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));const p=document.getElementById('page-'+name);if(p)p.classList.add('on');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.nav===name));S.lastView=name;save();if(name==='chat'){S.chatBadge=0;save();updateBadge();setTimeout(()=>{const m=document.getElementById('chat-msgs');if(m)m.scrollTop=m.scrollHeight;},80);}if(name==='home'){setTimeout(()=>{const w=document.getElementById('map-wrap');if(w&&w.offsetHeight>0)drawMap();},80);}}
 
 function enterApp(){S.introComplete=true;save();document.getElementById('yt-frame').src='about:blank';document.querySelectorAll('.ph').forEach(p=>p.classList.remove('on'));document.getElementById('app').classList.add('show');initApp();}
 
@@ -974,8 +985,25 @@ function advancePhase(n){if(n<=S.phase)return;S.phase=n;S.phaseExcluded=[];S.wai
 
 
 /* DOSSIERS */
-const DOSS={kirby67:{title:'Kirby 67',content:`<div class="class-tag">CLASSIFICATION : ALPHA-ROUGE</div><h3>IDENTIFICATION</h3><p>Kirby 67 est le double maléfique de Kirby 54, capturé lors de l'Edition II. Niveau de malveillance : 94% selon le BRADDY3000.</p><h3>DERNIÈRE LOCALISATION</h3><p>Ville de Lille — signal perdu lors de son évasion.</p><h3>MOTIVATIONS</h3><p>Kirby 67 parle obsessionnellement d'un "Monde au Serrano".</p><p class="warn">NE PAS mentionner le Serrano en sa présence.</p><h3>NOTE DE BRAD BITT</h3><p class="warn">Si vous le trouvez, ne le nourrissez pas. Et surtout pas de Serrano.</p>`}};
-function renderDossiers(){const l=document.getElementById('dossiers-list');const rows=[{id:'kirby67',name:'Kirby 67',u:true},{id:'bb',name:'Brad Bitt',u:false},{id:'b3k',name:'BRADDY3000',u:false},{id:'inc',name:'Incidents précédents',u:false},{id:'arc',name:'Archives',u:false}];l.innerHTML=rows.map(d=>`<div class="dossier-row ${d.u?'unlocked':'locked'}" ${d.u?`data-dos="${d.id}"`:''}><span class="dossier-name">${d.name}</span><span class="dossier-badge ${d.u?'open':'closed'}">${d.u?'DÉBLOQUÉ':'&#128274; ACCÈS REFUSÉ'}</span></div>`).join('');document.querySelectorAll('.dossier-row.unlocked').forEach(r=>r.addEventListener('click',()=>{const d=DOSS[r.dataset.dos];if(!d)return;document.getElementById('dd-title').textContent=d.title;document.getElementById('dd-body').innerHTML=d.content;nav('dossier-detail');}));}
+const DOSS={
+  kirby67:{title:'Kirby 67',content:`<div class="class-tag">CLASSIFICATION : ALPHA-ROUGE</div><h3>IDENTIFICATION</h3><p>Kirby 67 est le double maléfique de Kirby 54, capturé lors de l'Edition II. Niveau de malveillance : 94% selon le BRADDY3000.</p><h3>DERNIÈRE LOCALISATION</h3><p>Ville de Lille — signal perdu lors de son évasion.</p><h3>MOTIVATIONS</h3><p>Kirby 67 parle obsessionnellement d'un "Monde au Serrano".</p><p class="warn">NE PAS mentionner le Serrano en sa présence.</p><h3>NOTE DE BRAD BITT</h3><p class="warn">Si vous le trouvez, ne le nourrissez pas. Et surtout pas de Serrano.</p>`},
+  bb:{title:'Brad Bitt',content:`<div class="class-tag">CLASSIFICATION : CONFIDENTIEL</div><h3>IDENTITÉ</h3><p>Brad Bitt est le superviseur officiel de l'Opération Never 2 sans 3, Edition III. Fondateur de la Brad Corporation et inventeur du BRADDY3000. Son vrai prénom reste un mystère. Même pour lui.</p><h3>PERSONNALITÉ</h3><p>Sérieux en toutes circonstances, sauf quand il ne l'est pas. Ce qui arrive souvent. Porte des lunettes de soleil à l'intérieur. Obsédé par la raclette.</p><h3>CITATION OFFICIELLE</h3><p class="warn">"Je ne suis pas là pour rigoler. Si. Un peu."</p>`},
+  b3k:{title:'BRADDY3000',content:`<div class="class-tag">CLASSIFICATION : TECHNOLOGIE AVANCÉE</div><h3>DESCRIPTION</h3><p>Le BRADDY3000 est un système de surveillance et d'analyse développé par la Brad Corporation. Fiabilité estimée : entre 3% et 98% selon les circonstances. Les ingénieurs travaillent encore sur le problème.</p><h3>FONCTIONNALITÉS</h3><p>Localisation de Kirby 67. Attribution des gages. Calcul des Brad Coins. Surveillance des agents. Compilation de données absurdes.</p><h3>AVERTISSEMENT</h3><p class="warn">Le BRADDY3000 n'est pas responsable de ses propres décisions.</p>`},
+  inc:{title:'Incidents précédents',content:`<div class="class-tag">CLASSIFICATION : ARCHIVES EDITION I & II</div><h3>EDITION I</h3><p>Kirby 54 capturé après une série de gages légendaires. L'incident de la raclette en juillet est classifié. Le grille-pain de Brad a été perdu ce jour-là. Il n'a jamais été retrouvé.</p><h3>EDITION II</h3><p>Evasion de Kirby 67. Deux agents ont été contraints de porter des tenues choisies par le groupe pendant 3 heures. Le BRADDY3000 a crashé deux fois. Brad nie.</p><h3>NOTE</h3><p class="warn">Les détails exacts sont classifiés. Ce que vous ne savez pas ne peut pas vous blesser. En principe.</p>`},
+  arc:{title:'Archives',content:`<div class="class-tag">CLASSIFICATION : ULTRA SECRET</div><h3>CONTENU</h3><p>Ces archives contiennent l'intégralité des données collectées lors des trois éditions de l'Opération Never 2 sans 3. Scores finaux, incidents, contrats BRADDY3000 et données sensibles sur Kirby 67.</p><h3>ACCÈS</h3><p>Réservé aux agents ayant atteint la Phase 5. Le BRADDY3000 surveille les tentatives d'accès non autorisées.</p><p class="warn">Toute divulgation à des tiers — notamment à Kirby 67 — est strictement interdite.</p>`}
+};
+function renderDossiers(){
+  const l=document.getElementById('dossiers-list');
+  const rows=[
+    {id:'kirby67',name:'Kirby 67',u:true},
+    {id:'bb',name:'Brad Bitt',u:S.phase>=1},
+    {id:'b3k',name:'BRADDY3000',u:S.phase>=2},
+    {id:'inc',name:'Incidents précédents',u:S.phase>=3},
+    {id:'arc',name:'Archives',u:S.phase>=5}
+  ];
+  l.innerHTML=rows.map(d=>`<div class="dossier-row ${d.u?'unlocked':'locked'}" ${d.u?`data-dos="${d.id}"`:''}><span class="dossier-name">${d.name}</span><span class="dossier-badge ${d.u?'open':'closed'}">${d.u?'DÉBLOQUÉ':'&#128274; ACCÈS REFUSÉ'}</span></div>`).join('');
+  document.querySelectorAll('.dossier-row.unlocked').forEach(r=>r.addEventListener('click',()=>{const d=DOSS[r.dataset.dos];if(!d)return;document.getElementById('dd-title').textContent=d.title;document.getElementById('dd-body').innerHTML=d.content;nav('dossier-detail');}));
+}
 
 
 /* CHAT */
@@ -1030,6 +1058,20 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
   if(!resp)resp=FALLBACK[Math.floor(Math.random()*FALLBACK.length)];
   bradMsg(resp);
 }
+
+
+/* AIDE */
+const AIDE={
+  lore:{title:"Le LORE",body:"<h3>Le LORE</h3><p>L'Operation Never 2 sans 3 est la 3e edition. Le BRADDY3000 coordonne l'ensemble. Kirby 67 a ete repere a Lille. Votre mission : collecter des donnees via les gages pour l'identifier.</p><p class='warn'>Brad Bitt Corporation ne garantit pas que tout cela ait un sens.</p>"},
+  gages:{title:"Les Gages",body:"<h3>Les Gages</h3><p>Phases 1-4 : la roulette designe le participant. Phase 5 : Brad attribue directement. Un gage en cours apparait dans la section <span class='brand'>EN COURS</span>. Reussi : +BC. Echoue : rien. Brad note.</p>"},
+  doubleTrouble:{title:"Double Trouble",body:"<h3>Double Trouble</h3><p>Se deverrouille quand tous les gages individuels de la Phase 1 sont accomplis. Deux equipes s'affrontent : Fromage contre Charcuterie. Premiere equipe revenue : +5 BC par participant.</p>"},
+  chat:{title:"Le CHAT",body:"<h3>Le CHAT</h3><p>Brad repond a certains mots-cles. Tapez <span class='brand'>/liste</span> pour toutes les commandes. En cas de reponses bizarres : l'evenement BRAD EST PERDU est peut-etre actif.</p>"},
+  bonus:{title:"Les Bonus",body:"<h3>Les Bonus</h3><p><strong>Gage secondaire (15 BC)</strong> : remplace votre gage par un gage pioche parmi 4 cartes mystere. Bouton sur la carte de gage actif.</p><p><strong>Refaire la roue (20 BC)</strong> : votre gage retourne dans le pool, un nouveau est tire. Personnel uniquement.</p><p><strong>Laisser Passer (25 BC)</strong> : ignore definitivement votre gage. 0 BC.</p><p><strong>Mission Parallele (25 BC)</strong> : mini-mission annexe en parallele. +5 BC si reussie.</p><p><strong>Imposer une Mission (30 BC)</strong> : assigne une mission annexe a un autre joueur.</p><p><strong>Declencher un evenement (50 BC)</strong> : roue speciale avec 8 effets (BC doubles, parasites, Brad perdu...). Disponibles selon la phase.</p>"},
+  monnaie:{title:"La Monnaie",body:"<h3>Les BradCoins</h3><p>Gage individuel : +5 BC. Phase 5 : +10 BC. Mission annexe : +5 BC. Le Brouillage double les BC pendant 10 min. Depenses : bonus shop.</p>"},
+  braddy3000:{title:"Le BRADDY3000",body:"<h3>Le BRADDY3000</h3><p>Systeme de surveillance et d'analyse de Brad Bitt. Localise Kirby 67, gere les gages, calcule les BC. Fiabilite : entre 3% et 98%. Les ingenieurs travaillent sur le probleme. Depuis longtemps.</p>"},
+  dossiers:{title:"Les Dossiers",body:"<h3>Les Dossiers</h3><p>Se deverrouillent progressivement : Kirby 67 (debut) — Brad Bitt (Ph.1) — BRADDY3000 (Ph.2) — Incidents (Ph.3) — Archives (Ph.5).</p>"}
+};
+function openAide(id){const d=AIDE[id];if(!d)return;document.getElementById('ad-title').textContent=d.title;document.getElementById('ad-body').innerHTML=d.body;nav('aide-detail');}
 
 /* DOUBLE TROUBLE INTERFACE */
 function openDTInterface(){
