@@ -114,7 +114,7 @@ function loadState(){try{const s=localStorage.getItem('n2s3');if(s)return JSON.p
     chatHistory:[],introComplete:false,chatBadge:0,lastView:'home',
     doneGages:[],phaseExcluded:[],waitingForOui:false,phase1Announced:false,
     waitingForDelete:false,doneDT:false,phase1Complete:false,
-    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,
+    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,dtTeamA:[],dtTeamB:[],dtGoTime:0,contractTimer:null,
   };}
 let S=loadState();
 function save(){try{localStorage.setItem('n2s3',JSON.stringify(S));}catch(e){}}
@@ -402,7 +402,27 @@ function renderGages(){
   if(ph.contracts&&ph.contracts.length){
     html+=`<div class="contracts-section"><div class="contracts-title">CONTRATS BRADDY3000</div>`;
     if(contractsLocked){html+=`<div class="contract-locked"><p class="contract-locked-q">???</p><p class="contract-locked-hint">Se deverouille apres le Double Trouble</p></div>`;}
-    else{ph.contracts.forEach(c=>{html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward}</div></div>`;});}
+    else{
+      ph.contracts.forEach((c,ci)=>{
+        const isSynchro=c.name.includes('Synchronisation');
+        if(isSynchro){
+          const ct=S.contractTimer;
+          const now=Date.now();
+          if(ct&&ct.active&&now<ct.end){
+            const rem=Math.max(0,Math.ceil((ct.end-now)/1000));
+            const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
+            const p1=DISPLAY_NAMES[ct.p1],p2=DISPLAY_NAMES[ct.p2];
+            html+=`<div class="contract-card contract-active-timer" id="contract-synchro"><div class="contract-name">&#9201; ${c.name}</div><div class="contract-players">${p1} &amp; ${p2} — en cours</div><div class="contract-timer-display" id="contract-countdown">${mm}:${ss}</div><div class="contract-desc">${c.desc}</div><button class="contract-claim-btn" id="contract-claim" style="display:none">CONTRAT TERMINE — RECLAMER x1.5</button></div>`;
+          } else if(ct&&ct.active&&now>=ct.end){
+            html+=`<div class="contract-card contract-done"><div class="contract-name">&#10003; ${c.name}</div><div class="contract-desc">Contrat accompli par ${DISPLAY_NAMES[ct.p1]} et ${DISPLAY_NAMES[ct.p2]}.</div><button class="contract-claim-btn" id="contract-claim">RECLAMER LE MULTIPLICATEUR x1.5</button></div>`;
+          } else {
+            html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward}</div><button class="contract-launch-btn" id="contract-launch-${ci}">LANCER LE CONTRAT</button></div>`;
+          }
+        } else {
+          html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward}</div></div>`;
+        }
+      });
+    }
     html+='</div>';
   }
 
@@ -435,9 +455,23 @@ function renderGages(){
   document.querySelectorAll('[data-agbonus]').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const idx=parseInt(btn.dataset.idx),bonus=btn.dataset.agbonus;
-      if(bonus==='refaire')applyRefaireRoue(idx);
-      else if(bonus==='secondaire')applyGageSecondaire(idx);
-      else if(bonus==='passer')applyLaisserPasser(idx);
+      const ag=S.activeGages[idx];if(!ag)return;
+      const pk=R_KEYS[ag.playerIdx];
+      const info={refaire:{name:"Refaire la roue",desc:"Votre gage actuel retourne dans le pool. Une roue tire un nouveau gage parmi ceux disponibles. Personnel uniquement.",cost:20},secondaire:{name:"Gage secondaire",desc:"4 cartes mystere. Votre gage actuel est remplace par celui selectionne. Peut etre plus simple... ou beaucoup plus complique.",cost:15},passer:{name:"Laisser Passer",desc:"Votre gage actuel est ignore definitvement. Aucun Brad Coin attribue. Le gage disparait.",cost:25}};
+      const b=info[bonus];if(!b)return;
+      const coins=S.coins[pk]||0;
+      const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:350;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;';
+      ov.innerHTML=`<p style="font-family:var(--orb);font-size:11px;color:var(--red2);letter-spacing:.3em">${b.name.toUpperCase()}</p>
+        <p style="font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);line-height:1.8;text-align:center;max-width:320px">${b.desc}</p>
+        <p style="font-family:var(--orb);font-size:13px;color:var(--orange)">Cout : ${b.cost} BC — Votre solde : ${coins} BC</p>
+        ${coins<b.cost?'<p style="font-family:var(--mono);font-size:10px;color:var(--red2)">BradCoins insuffisants.</p>':''}
+        <div style="display:flex;gap:12px">
+          <button id="agb-buy" ${coins<b.cost?'disabled style="opacity:.4"':''} style="font-family:var(--orb);font-size:12px;letter-spacing:.3em;padding:14px 30px;background:rgba(204,0,0,.2);border:2px solid var(--red);color:var(--white)">ACHETER</button>
+          <button id="agb-back" style="font-family:var(--mono);font-size:10px;padding:12px 24px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.5)">RETOUR</button>
+        </div>`;
+      document.body.appendChild(ov);
+      ov.querySelector('#agb-back').addEventListener('click',()=>ov.remove());
+      ov.querySelector('#agb-buy').addEventListener('click',()=>{ov.remove();if(bonus==='refaire')applyRefaireRoue(idx);else if(bonus==='secondaire')applyGageSecondaire(idx);else if(bonus==='passer')applyLaisserPasser(idx);});
     });
   });
 
@@ -454,6 +488,7 @@ function renderGages(){
         const pidx=R_KEYS.indexOf(pk);
         addActiveGage(gid,pidx);save();renderGages();flash(100,true);
         bradMsg(`Mission "${g.name}" attribuee a ${DISPLAY_NAMES[pidx]}. Le BRADDY3000 a decide.`);
+        if(g.bradOnStart){setTimeout(()=>bradMsg(g.bradOnStart),1800);}
       } else {openRoulette(g);}
     });
   });
@@ -464,6 +499,45 @@ function renderGages(){
   if(launchBtn){launchBtn.addEventListener('click',openDTInterface);}
   document.querySelectorAll('.sm-ok').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'reussi')));
   document.querySelectorAll('.sm-fail').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'echoue')));
+  // Contract: launch button
+  document.querySelectorAll('[id^="contract-launch-"]').forEach(btn=>{btn.addEventListener('click',()=>openContractSynchroSelect());});
+  // Contract: live countdown
+  const cdEl=document.getElementById('contract-countdown');
+  if(cdEl&&S.contractTimer?.active){
+    const tick=()=>{const rem=Math.max(0,Math.ceil((S.contractTimer.end-Date.now())/1000));const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');const el=document.getElementById('contract-countdown');if(el)el.textContent=mm+':'+ss;else{clearInterval(ctI);return;}if(rem===0){clearInterval(ctI);renderGages();}};
+    const ctI=setInterval(tick,1000);
+  }
+  // Contract: claim button
+  const claimBtn=document.getElementById('contract-claim');
+  if(claimBtn){claimBtn.addEventListener('click',()=>{S.contractTimer={active:false};save();renderGages();bradMsg('Contrat Synchronisation BRADDY3000 accompli. Le multiplicateur x1.5 est actif pour le prochain gage. Bonne performance.');});}
+}
+
+function openContractSynchroSelect(){
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;overflow-y:auto;';
+  ov.innerHTML=`<p style="font-family:var(--orb);font-size:12px;color:var(--red2);letter-spacing:.3em;text-align:center">SYNCHRONISATION BRADDY3000<br><span style="font-size:9px;opacity:.6">Selectionner les 2 participants</span></p>
+    <div id="cst-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:300px">
+      ${DISPLAY_NAMES.map((n,i)=>`<button class="cst-player" data-pidx="${i}" style="font-family:var(--orb);font-size:13px;padding:14px;border:1px solid rgba(204,0,0,.4);color:var(--white);background:rgba(0,0,0,.3)">${n}</button>`).join('')}
+    </div>
+    <p id="cst-hint" style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.2em">Selectionnez 2 joueurs</p>
+    <button id="cst-go" disabled style="font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.4em;padding:16px 50px;background:transparent;border:2px solid var(--red);color:var(--white);opacity:.4">GO !</button>
+    <button id="cst-cancel" style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);padding:8px;border:1px solid rgba(255,255,255,.1)">Annuler</button>`;
+  document.body.appendChild(ov);
+  let sel=[];
+  ov.querySelectorAll('.cst-player').forEach(btn=>{btn.addEventListener('click',()=>{
+    const idx=parseInt(btn.dataset.pidx);
+    if(sel.includes(idx)){sel=sel.filter(i=>i!==idx);btn.style.background='rgba(0,0,0,.3)';btn.style.borderColor='rgba(204,0,0,.4)';}
+    else if(sel.length<2){sel.push(idx);btn.style.background='rgba(204,0,0,.25)';btn.style.borderColor='var(--red)';}
+    const go=ov.querySelector('#cst-go');if(sel.length===2){go.disabled=false;go.style.opacity='1';ov.querySelector('#cst-hint').textContent=`${DISPLAY_NAMES[sel[0]]} & ${DISPLAY_NAMES[sel[1]]}`;}
+    else{go.disabled=true;go.style.opacity='.4';ov.querySelector('#cst-hint').textContent='Selectionnez 2 joueurs';}
+  });});
+  ov.querySelector('#cst-go').addEventListener('click',()=>{
+    if(sel.length!==2)return;
+    const end=Date.now()+20*60*1000;
+    S.contractTimer={active:true,p1:sel[0],p2:sel[1],end,start:Date.now()};save();
+    ov.remove();renderGages();
+    bradMsg(`Contrat Synchronisation BRADDY3000 lance ! ${DISPLAY_NAMES[sel[0]]} et ${DISPLAY_NAMES[sel[1]]} doivent rester main dans la main pendant 20 minutes. Le BRADDY3000 surveille. Courage.`);
+  });
+  ov.querySelector('#cst-cancel').addEventListener('click',()=>ov.remove());
 }
 
 function checkPhase1Complete(){
@@ -593,10 +667,62 @@ function spinRoulette(){
 function startMissionFromRoulette(){
   if(!rCurrentGage||rWinnerIdx<0)return;
   document.getElementById('roulette-ol').classList.add('hidden');
+  // Special: Commande Controlee needs 2 wheels
+  if(rCurrentGage.id==='p2g1'){
+    openCommandeControlee(rWinnerIdx,rCurrentGage);
+    return;
+  }
   S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==rCurrentGage.id);
   addActiveGage(rCurrentGage.id,rWinnerIdx);
   save();renderGages();showPage('gages');
   setTimeout(()=>bradMsg(`Mission "${rCurrentGage.name}" attribuee a ${DISPLAY_NAMES[rWinnerIdx]}. Elle apparait dans la section "En cours".`),400);
+}
+
+function openCommandeControlee(clientIdx,gage){
+  // Player wheel 2: operator (excluding client)
+  const opPlayers=R_PLAYERS.map((p,i)=>({name:p,key:R_KEYS[i],color:R_COLORS[i],idx:i})).filter(pl=>pl.idx!==clientIdx);
+  const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;overflow-y:auto;';
+  ov.innerHTML=`<p style="font-family:var(--orb);font-size:11px;color:var(--red2);letter-spacing:.3em;text-align:center">COMMANDE CONTROLEE<br><span style="font-size:9px;opacity:.6">Attribution des roles</span></p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:340px">
+      <div style="text-align:center">
+        <p style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.25em;margin-bottom:6px">CLIENT<br>(choisit la taille)</p>
+        <div style="border:2px solid rgba(0,255,65,.5);padding:14px;background:rgba(0,40,15,.3)"><p style="font-family:var(--orb);font-size:16px;font-weight:700;color:#00ff41">${DISPLAY_NAMES[clientIdx]}</p></div>
+      </div>
+      <div style="text-align:center">
+        <p style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.25em;margin-bottom:6px">OPERATEUR<br>(choisit le reste)</p>
+        <div class="roll-wheel-wrap" style="margin:0">
+          <div class="roll-ptr" style="font-size:16px">&#9660;</div>
+          <canvas id="cc-cv" width="130" height="130" style="border-radius:50%;box-shadow:0 0 20px rgba(204,0,0,.4)"></canvas>
+        </div>
+        <p id="cc-op-name" style="font-family:var(--orb);font-size:14px;color:var(--red2);margin-top:6px;letter-spacing:.1em">?</p>
+      </div>
+    </div>
+    <div id="cc-result" class="hidden" style="display:none;text-align:center">
+      <p style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.2em">Attribution confirmee</p>
+      <button id="cc-start" style="font-family:var(--orb);font-size:12px;font-weight:700;letter-spacing:.3em;padding:14px 40px;background:rgba(204,0,0,.2);border:2px solid var(--red);color:var(--white);margin-top:12px">&#8627; DEMARRER</button>
+    </div>`;
+  document.body.appendChild(ov);
+  let ccAngle=0;
+  const n=opPlayers.length,seg=2*Math.PI/n,tgt=Math.floor(Math.random()*n);
+  const tBase=(n-tgt)*seg,tot=tBase+(4+Math.floor(Math.random()*2))*2*Math.PI;
+  const dur=3000,t0=performance.now();
+  (function anim(now){
+    const t=Math.min((now-t0)/dur,1);
+    ccAngle=(1-Math.pow(1-t,4))*tot;
+    drawRoulette(ccAngle,opPlayers,document.getElementById('cc-cv'));
+    if(t<1){requestAnimationFrame(anim);}
+    else{
+      const op=opPlayers[tgt];
+      document.getElementById('cc-op-name').textContent=op.name.toUpperCase();
+      flash(150,true);beep(660,.3,.1);
+      const res=document.getElementById('cc-result');if(res)res.style.display='block';
+      document.getElementById('cc-start').addEventListener('click',()=>{
+        S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gage.id);
+        addActiveGage(gage.id,clientIdx);save();ov.remove();renderGages();showPage('gages');
+        bradMsg(`Commande Controlee : ${DISPLAY_NAMES[clientIdx]} est le CLIENT (choisit uniquement la taille). ${op.name} est l'OPERATEUR (choisit le reste du repas). Le BRADDY3000 observe la chaine de commandement.`);
+      });
+    }
+  })(performance.now());
 }
 
 /* BONUS UTILITY (on active gages) */
@@ -1007,7 +1133,41 @@ function renderDossiers(){
 
 
 /* CHAT */
-const RESPONSES={kirby:["Excellente question. J'aimerais egalement le savoir.","Kirby 67 est quelque part. Le BRADDY3000 analyse."],mission:["Si je vous le disais, ce ne serait plus une mission.","Les missions se revelent d'elles-memes. Comme moi."],gage:["Chaque gage accompli rapproche le BRADDY3000 de la verite.","Le gage est votre destinee. Embrassez-la."],bonjour:["Ah. Vous voila.","Salutations.","Je savais que vous repasseriez."],salut:["Salut. Revenons aux affaires.","Hmm. Salut."],serrano:["Ne. Prononcez. Pas. Ce. Mot.","...Je vous surveille."],grille:["Mon grille-pain est temporairement indisponible."],brad:["C'est moi.","Vous avez mentionne mon nom. Je suis mefiant."],merci:["Le BRADDY3000 prend note de votre gratitude."],raclette:["Sujet delicat. Continuons.","Le BRADDY3000 enregistre votre interet culinaire."],coin:["Les Brad Coins sont une monnaie reconnue dans 0 pays.","Le BRADDY3000 recommande la richesse."],coupe:["Je pense que c'est moi, oui, je me sens equipe de foot de temps en temps.","Kirby 67 supporte la mauvaise equipe. C'est tout ce que je dirai."],foot:["Je me sens equipe de foot de temps en temps, oui.","Football ? Le BRADDY3000 prefere les sports ou on porte des lunettes."],france:["Je vis a Lille depuis une duree indeterminee.","La France est un beau pays. Kirby 67 y est quelque part."],ia:["Je suis Brad Bitt, pas une IA.","Le BRADDY3000 est offense par cette insinuation."],chatgpt:["Qui ? Je ne connais pas cette personne.","ChatGPT ne recherche pas Kirby 67. Moi si. C'est un avantage."],splatoon:["Je ne joue pas aux jeux video. Je suis deja en mission permanente."],oui:["Bien. Le BRADDY3000 enregistre votre accord.","Voila une reponse acceptable."],non:["Le BRADDY3000 desapprouve. Legerement.","Non ? Le BRADDY3000 note votre rebellion."],pourquoi:["Excellente question. Brad Bitt n'a pas toujours de reponse."],aide:["Tapez /liste pour les commandes. Pour le reste, je suis la."]};
+const RESPONSES={
+  kirby:["Excellente question. J'aimerais egalement le savoir.","Kirby 67 est quelque part. Le BRADDY3000 analyse. Patiemment.","Notre cible est insaisissable. Comme moi, mais en plus petit et en plus violet.","Le BRADDY3000 a enregistre 47 signaux suspects ce matin. 46 etaient des grille-pains. Le 47e restait flou."],
+  mission:["Si je vous le disais, ce ne serait plus une mission.","Les missions se revelent d'elles-memes. Comme moi, d'ailleurs.","La mission est claire. Ou presque. Le BRADDY3000 affine encore.","Une mission Brad Corporation n'est jamais simple. C'est une fonctionnalite, pas un bug."],
+  gage:["Chaque gage accompli rapproche le BRADDY3000 de la verite.","Le gage est votre destinee. Embrassez-la.","Les gages sont sacres. Presque autant que la raclette.","Le BRADDY3000 observe. Toujours. Meme quand vous pensez qu'il ne regarde pas."],
+  bonjour:["Ah. Vous voila.","Salutations. Je vous attendais.","Je savais que vous repasseriez. Le BRADDY3000 avait calcule une probabilite de 94.7%.","Bonsoir. Ou bonjour. Le temps est une donnee secondaire pour le BRADDY3000."],
+  salut:["Salut. Revenons aux affaires.","Hmm. Salut. Votre enthousiasme me touche.","Salutations informelles enregistrees. Le BRADDY3000 prefere le 'Bonjour monsieur Bitt' mais je m'adapte."],
+  serrano:["Ne. Prononcez. Pas. Ce. Mot.","...Je vous surveille.","ERREUR — mot interdit detecte. Le BRADDY3000 a failli s'effondrer.","Ce mot est classe confidentiel niveau rouge. Merci de votre comprehension."],
+  grille:["Mon grille-pain est temporairement indisponible.","Ce sujet est classe confidentiel niveau grille-pain.","Le grille-pain de Brad Corporation fait l'objet d'une enquete interne. Je n'ai rien a dire."],
+  brad:["C'est moi.","Vous avez mentionne mon nom. Je suis mefiant.","Brad Bitt — present, comme toujours. Contrairement a Kirby 67.","Je suis Brad. Bitt. Sans le second T. Enfin si, avec. C'est complique."],
+  merci:["Le BRADDY3000 prend note de votre gratitude.","De rien. C'est mon metier. Enfin, un de mes metiers.","Votre reconnaissance est enregistree. Elle sera conservee pendant 72h puis effacee. Brad Corporation, RGPD."],
+  raclette:["Sujet delicat. Continuons.","Le BRADDY3000 enregistre votre interet culinaire.","La raclette est une affaire serieuse. Ne la traitez pas a la legere.","La raclette est un sujet de securite nationale. Je prefere ne pas elaborer."],
+  coin:["Les Brad Coins sont une monnaie reconnue dans 0 pays. C'est une exclusivite.","Le BRADDY3000 recommande la richesse.","Vous possedez probablement moins de Brad Coins que Brad Bitt. Je ne confirme pas le montant.","Un Brad Coin vaut exactement un Brad Coin. Ne cherchez pas a convertir."],
+  coupe:["Je pense que c'est moi, oui, je me sens equipe de foot de temps en temps.","Kirby 67 supporte la mauvaise equipe. C'est tout ce que je dirai.","Le BRADDY3000 a analyse les stats. Je ne suis pas autorise a divulguer les resultats."],
+  foot:["Je me sens equipe de foot de temps en temps, oui.","Football ? Le BRADDY3000 prefere les sports ou on porte des lunettes.","Je joue en position 'coach assis dans le BRADDY3000'. C'est une position tactique."],
+  france:["Je vis a Lille depuis une duree indeterminee.","La France est un beau pays. Kirby 67 y est quelque part.","France — berceau de la raclette, du Serrano et de Brad Bitt. Deux de ces faits sont vrais."],
+  ia:["Je suis Brad Bitt, pas une IA.","Le BRADDY3000 est offense par cette insinuation.","Techniquement je suis... non. Non, rien. Passez votre chemin.","Si j'etais une IA, est-ce que j'aurais des avis sur la raclette ? Ne repondez pas a ca."],
+  chatgpt:["Qui ? Je ne connais pas cette personne.","ChatGPT ne recherche pas Kirby 67. Moi si. Decidez vous-memes qui est le plus utile.","Je ne commente pas la concurrence. C'est ma politique officielle."],
+  fatigué:["Fatigue detecte. Le BRADDY3000 recommande de continuer quand meme.","La fatigue est une donnee subjective. Le BRADDY3000 ne fatigue jamais. Moi non plus. Enfin, presque."],
+  hungry:["La faim est normale a ce stade de l'operation. Phase 2 approche."],
+  faim:["La faim est une donnee biologique. Le BRADDY3000 la comprend mais ne peut rien y faire.","Phase 2 gere ce probleme. En principe."],
+  perdu:["Perdu ? Le BRADDY3000 connait votre position. Enfin, a peu pres.","Ne vous perdez pas. Kirby 67 profite de la confusion."],
+  chaud:["Temperature ambiante enregistree. Brad Corporation ne prend pas en charge la climatisation."],
+  splatoon:["Je ne joue pas aux jeux video. Je suis en mission permanente.","Splatoon ? Le BRADDY3000 a analyse 3 Splatfests sans comprendre l'enjeu. Je m'en remets."],
+  nintendo:["Nintendo. Connais pas. Sauf le BRADDY3000 Edition, qui n'existe pas encore."],
+  oui:["Bien. Le BRADDY3000 enregistre votre accord.","Voila une reponse acceptable.","Oui. Parfait. Continuez dans cette direction."],
+  non:["Le BRADDY3000 desapprouve. Legerement.","Non ? Le BRADDY3000 note votre rebellion.","Interessant. Non. Vous assumez."],
+  pourquoi:["Excellente question. Brad Bitt n'a pas toujours de reponse.","Le BRADDY3000 traite votre 'pourquoi' depuis 4 minutes. Resultat : confus.","Parce que. C'est la reponse officielle de Brad Corporation."],
+  aide:["Tapez /liste pour les commandes. Pour le reste, je suis la.","L'aide de Brad Bitt est gratuite. Ce qui est rare."],
+  super:["Oui, je suis super. Merci de le noter.","Super. Le BRADDY3000 enregistre votre enthousiasme."],
+  comment:["Le BRADDY3000 va bien. Relativement.","Bien. Enfin, 'bien' est un concept flou pour le BRADDY3000."],
+  cool:["Cool est un terme que le BRADDY3000 evalue a 8.3/10.","Je suis cool. C'est factuel."],
+  fnac:["La FNAC est une zone d'interet strategique pour la Phase 5. Le BRADDY3000 surveille les bornes de demonstration."],
+  lille:["Ville cible de l'operation. Kirby 67 y est. Quelque part. On cherche.","Lille est une belle ville. Kirby 67 y a gache ca."],
+};
+
 const FALLBACK=["Interessant. Le BRADDY3000 prend note.","Hmm. Je n'ai pas de reponse claire a cela.","Le BRADDY3000 analyse votre message. Resultat : confus.","Votre message a ete recu, archive et partiellement incompris.","Je pourrais repondre. Mais je choisirais de ne pas le faire.","La reponse est 42. Ou peut-etre 67.","Notez que je ne suis pas un assistant. Je suis Brad Bitt.","Le BRADDY3000 a plante sur cette requete. Reessayez."];
 function addUserMsg(txt){const m=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='chat-msg';d.innerHTML=`<div class="msg-label">Vous</div><div class="msg-sep">—</div><div class="msg-text">${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;S.chatHistory.push({type:'user',text:txt});save();}
 function bradMsg(txt){const m=document.getElementById('chat-msgs'),ty=document.getElementById('chat-typing');ty.classList.remove('hidden');m.scrollTop=m.scrollHeight;setTimeout(()=>{ty.classList.add('hidden');const d=document.createElement('div');d.className='chat-msg brad-msg';d.innerHTML=`<div class="msg-label brad pacifico">Brad Bitt</div><div class="msg-sep">—</div><div class="msg-text">${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;S.chatHistory.push({type:'brad',text:txt});const chatPg=document.getElementById('page-chat');if(!chatPg.classList.contains('on')){S.chatBadge=(S.chatBadge||0)+1;updateBadge();}save();},1000+txt.length*15);}
@@ -1077,6 +1237,7 @@ function openAide(id){const d=AIDE[id];if(!d)return;document.getElementById('ad-
 function openDTInterface(){
   const shuffled=[...DISPLAY_NAMES].map((n,i)=>({name:n,key:R_KEYS[i]})).sort(()=>Math.random()-.5);
   const teamA=shuffled.slice(0,2),teamB=shuffled.slice(2,4);
+  S.dtTeamA=teamA.map(p=>R_KEYS.indexOf(p.key));S.dtTeamB=teamB.map(p=>R_KEYS.indexOf(p.key));save();
   const ph=PHASES[Math.min(S.phase,5)];
   document.getElementById('dt-ol-title-el').innerHTML=`${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}`;
   document.getElementById('dt-ol-note').textContent='Petite quantité uniquement — éviter le gaspillage';
@@ -1132,7 +1293,13 @@ function startDTCountdown(){
       setTimeout(()=>{
         flash(200,true);beep(880,.4,.2,'sine');shake(4,300);
         wrap.classList.add('hidden');
-        document.getElementById('dt-go-section').classList.remove('hidden');
+        S.dtGoTime=Date.now();save();
+        const gs=document.getElementById('dt-go-section');
+        gs.classList.remove('hidden');
+        // Add live timer
+        const timerEl=document.createElement('p');timerEl.id='dt-elapsed';timerEl.style.cssText='font-family:var(--orb);font-size:14px;color:rgba(255,255,255,.5);letter-spacing:.3em;margin-bottom:12px;';
+        gs.insertBefore(timerEl,gs.querySelector('.dt-go-sub'));
+        const dtTick=setInterval(()=>{const el=document.getElementById('dt-elapsed');if(!el){clearInterval(dtTick);return;}const e=Math.floor((Date.now()-S.dtGoTime)/1000);const m=String(Math.floor(e/60)).padStart(2,'0'),s=String(e%60).padStart(2,'0');el.textContent=`CHRONO : ${m}:${s}`;},1000);
       },900);
     }
   }
