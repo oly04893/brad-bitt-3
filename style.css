@@ -447,3 +447,11 @@ body{background:linear-gradient(180deg,#230000 0%,#0b0000 18%,#000 40%,#0f0000 5
 .sg-stop-btn{font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.35em;padding:16px 50px;background:transparent;border:2px solid var(--red);color:var(--white);animation:actGl 2s ease-in-out infinite;}
 .sg-stop-btn:active{transform:scale(.97);background:rgba(204,0,0,.15);}
 .sg-stop-btn:disabled{opacity:.35;animation:none;cursor:not-allowed;}
+
+/* CONTRACT ACTIVE TIMER */
+.contract-active-timer{border:1px solid rgba(0,255,65,.3);background:rgba(0,30,0,.25);}
+.contract-players{font-family:var(--mono);font-size:10px;color:rgba(0,255,65,.7);letter-spacing:.2em;margin:4px 0;}
+.contract-timer-display{font-family:var(--orb);font-size:32px;font-weight:900;color:#00ff41;letter-spacing:.2em;margin:6px 0;text-shadow:0 0 20px rgba(0,255,65,.5);}
+.contract-done{border-color:rgba(0,255,65,.4);background:rgba(0,40,15,.25);}
+.contract-launch-btn,.contract-claim-btn{width:100%;font-family:var(--orb);font-size:11px;letter-spacing:.25em;padding:10px;background:rgba(204,0,0,.15);border:1px solid rgba(204,0,0,.5);color:var(--white);margin-top:10px;}
+.contract-launch-btn:active,.contract-claim-btn:active{background:rgba(204,0,0,.3);}
