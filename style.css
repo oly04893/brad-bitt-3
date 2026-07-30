@@ -433,3 +433,17 @@ body{background:linear-gradient(180deg,#230000 0%,#0b0000 18%,#000 40%,#0f0000 5
 /* BRADDY ANALYZE OVERLAY */
 .braddy-analyze{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;letter-spacing:.35em;color:rgba(0,255,65,.8);}
 .braddy-analyze.hidden{display:none!important;}
+
+/* SIDE MISSIONS */
+.side-mission-card{border:1px solid rgba(150,80,255,.4);background:rgba(50,0,100,.2);padding:12px;margin-bottom:8px;}
+.sm-player{font-family:var(--orb);font-size:10px;color:rgba(200,150,255,.9);letter-spacing:.2em;font-weight:700;}
+.sm-desc{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.65);line-height:1.6;margin:6px 0;}
+.sm-bc{font-family:var(--orb);font-size:9px;color:var(--orange);margin-bottom:8px;}
+.sm-btns{display:flex;gap:8px;}
+.sm-ok{font-family:var(--orb);font-size:10px;letter-spacing:.15em;padding:8px 16px;background:rgba(0,255,65,.1);border:1px solid rgba(0,255,65,.4);color:#00ff41;}
+.sm-fail{font-family:var(--orb);font-size:10px;letter-spacing:.15em;padding:8px 16px;background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.4);}
+
+/* SG STOP BUTTON */
+.sg-stop-btn{font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.35em;padding:16px 50px;background:transparent;border:2px solid var(--red);color:var(--white);animation:actGl 2s ease-in-out infinite;}
+.sg-stop-btn:active{transform:scale(.97);background:rgba(204,0,0,.15);}
+.sg-stop-btn:disabled{opacity:.35;animation:none;cursor:not-allowed;}
