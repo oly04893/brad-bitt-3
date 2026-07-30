@@ -31,10 +31,24 @@ const DISPLAY_NAMES = ['Hippolyte','Teo','Edwin','Nathanael'];
 const EV_COLORS  = ['#1a0040','#002a1a','#1a1500','#001a2a','#2a0020','#0a1500'];
 
 const SECONDARY_GAGES = [
-  {id:'sg1',name:'Monologue de Comptoir',desc:"S'asseoir seul a un comptoir, commander quelque chose et engager une conversation de 3 minutes avec un inconnu.",bc:8},
-  {id:'sg2',name:"L'Artiste Incompris",desc:"Convaincre quelqu'un de dessiner votre portrait en moins de 60 secondes, sur n'importe quel support.",bc:8},
-  {id:'sg3',name:'Le Vendeur du Siecle',desc:"Convaincre quelqu'un d'acheter un objet fictif invente sur le moment en moins de 2 minutes.",bc:8},
+  {id:'sg1',name:"L'Expert Local",desc:"Demander a un passant : Selon vous, quel est le meilleur endroit a visiter a Lille ? Puis raconter la reponse au groupe.",bc:5},
+  {id:'sg2',name:"L'Inspection BRADDY3000",desc:"Entrer dans un magasin et demander au vendeur : Quel est l'article le plus original ou insolite que vous vendez actuellement ? Le montrer ou le decrire au groupe.",bc:5},
+  {id:'sg3',name:"Pronostic du futur",desc:"Demander a un passant : Selon vous, quel sera le resultat du quart de finale de la Coupe du monde 2030 entre la France et l'Italie, Zidane etant selectonneur ? Transmettre le score au BRADDY3000.",bc:5},
+  {id:'sg4',name:"Transmission Prioritaire",desc:"Demander a un inconnu de choisir un nombre entre 1 et 10. Annoncer tres serieusement au groupe : Le BRADDY3000 enregistre la valeur... transmission validee.",bc:5},
 ];
+
+const SIDE_MISSIONS = [
+  {id:"sm1",desc:"Faire un compliment sincere a un inconnu."},
+  {id:"sm2",desc:"Trouver un objet rouge et le montrer au groupe."},
+  {id:"sm3",desc:"Demander l'heure alors que tu as ton telephone dans la main."},
+  {id:"sm4",desc:"Photo de groupe avec l'air extremement serieux."},
+  {id:"sm5",desc:"Trouver un objet portant le chiffre 67."},
+  {id:"sm6",desc:"Faire dire Serrano a un membre du groupe naturellement."},
+  {id:"sm7",desc:"Faire une poignee de main ridicule avec Brad Corporation comme excuse."},
+  {id:"sm8",desc:"Trouver le prenom Brad ecrit quelque part."},
+  {id:"sm9",desc:"Demander a quelqu'un quel est son fromage prefere."},
+  {id:"sm10",desc:"Selfie ou personne ne regarde l'appareil."},
+]
 
 const EVENTS = [
   {id:'ev1',name:'SYNCHRONISATION FORCEE',desc:'Les 4 agents se prennent en photo dans une posture imposee decidee par Brad Bitt. 30 secondes pour trouver la pose.'},
@@ -100,7 +114,7 @@ function loadState(){try{const s=localStorage.getItem('n2s3');if(s)return JSON.p
     chatHistory:[],introComplete:false,chatBadge:0,lastView:'home',
     doneGages:[],phaseExcluded:[],waitingForOui:false,phase1Announced:false,
     waitingForDelete:false,doneDT:false,phase1Complete:false,
-    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],
+    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,
   };}
 let S=loadState();
 function save(){try{localStorage.setItem('n2s3',JSON.stringify(S));}catch(e){}}
@@ -147,8 +161,10 @@ function addActiveGage(gageId,playerIdx){
 }
 function completeActiveGage(agIdx,status){
   const ag=S.activeGages[agIdx];if(!ag)return;
-  const bc=status==='reussi'?ag.bc:0;
+  let bc=status==='reussi'?ag.bc:0;
   if(status==='reussi'){
+    if(S.brouillageEnd&&Date.now()<S.brouillageEnd){bc*=2;setTimeout(()=>bradMsg(`BROUILLAGE ACTIF — BC doubles ! ${DISPLAY_NAMES[ag.playerIdx]} gagne ${bc} BC.`),200);}
+    if((S.primeNext||0)>0){bc+=S.primeNext;S.primeNext=0;setTimeout(()=>bradMsg(`PRIME EXCEPTIONNELLE appliquee. BC bonus inclus.`),400);}
     S.coins[R_KEYS[ag.playerIdx]]=(S.coins[R_KEYS[ag.playerIdx]]||0)+bc;
     if(!S.phaseExcluded)S.phaseExcluded=[];
     if(!S.phaseExcluded.includes(R_KEYS[ag.playerIdx]))S.phaseExcluded.push(R_KEYS[ag.playerIdx]);
@@ -165,6 +181,16 @@ function completeActiveGage(agIdx,status){
   save();
   checkPhase1Complete();
   renderGages();renderBraddy();
+}
+
+/* SIDE MISSIONS */
+function completeSideMission(smIdx, status){
+  if(!S.sideMissions)return;
+  const sm=S.sideMissions.find((_,i)=>i===smIdx);if(!sm)return;
+  sm.status=status;
+  if(status==='reussi'){S.coins[R_KEYS[sm.playerIdx]]=(S.coins[R_KEYS[sm.playerIdx]]||0)+sm.bc;save();bradMsg(`Mission annexe reussie par ${DISPLAY_NAMES[sm.playerIdx]}. +${sm.bc} BC credites. Le BRADDY3000 approuve.`);}
+  else{save();bradMsg(`Mission annexe echouee. Le BRADDY3000 est... comprenhensif. Presque.`);}
+  save();renderGages();
 }
 
 /* BRADDY3000 ANALYZE ANIMATION */
@@ -314,15 +340,6 @@ function initMap(){
   setTimeout(drawMap,150);
 }
 
-function checkPhase1Complete(){
-  if(S.phase!==1||S.phase1Complete)return;
-  const ph1=PHASES[1];
-  const allDone=ph1.gages.every(g=>S.doneGages?.includes(g.id));
-  if(allDone&&S.doneDT){
-    S.phase1Complete=true;save();
-    setTimeout(()=>{bradMsg("Bien. Le BRADDY3000 vient de recevoir un volume conséquent de données — missions accomplies, coordonnées de terrain, résultats Double Trouble. Je transmets l'ensemble au système d'analyse central. Restez à l'écoute : la Phase 2 se profile. En attendant — pour ceux que ça intéresse — un Contrat BRADDY3000 est désormais déverrouillé dans la section Gages. Liaison Synchronisation. N'hésitez pas à y faire un tour. Ou pas. C'est vous qui voyez.");},2500);
-  }
-}
 function drawMap(){const cv=document.getElementById('cv-map'),wrap=document.getElementById('map-wrap');cv.width=wrap.offsetWidth||window.innerWidth;cv.height=wrap.offsetHeight||300;const ctx=cv.getContext('2d'),W=cv.width,H=cv.height;ctx.strokeStyle='rgba(204,0,0,.08)';ctx.lineWidth=1;for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}ctx.strokeStyle='rgba(204,0,0,.04)';for(let i=-H;i<W;i+=80){ctx.beginPath();ctx.moveTo(i,0);ctx.lineTo(i+H,H);ctx.stroke();}const ul=ZONES.filter(z=>S.phase>=z.ph);if(ul.length>1){ctx.strokeStyle='rgba(204,0,0,.2)';ctx.lineWidth=1;ctx.setLineDash([4,6]);for(let i=0;i<ul.length-1;i++){const a=ul[i],b=ul[i+1];ctx.beginPath();ctx.moveTo(a.x*W/100,a.y*H/100);ctx.lineTo(b.x*W/100,b.y*H/100);ctx.stroke();}ctx.setLineDash([]);}ctx.font='8px monospace';ctx.fillStyle='rgba(255,255,255,.12)';ctx.fillText('50.63N',4,12);ctx.textAlign='right';ctx.fillText('3.07E',W-4,12);ctx.textAlign='left';}
 
 
@@ -398,6 +415,17 @@ function renderGages(){
     });
   }
 
+  // SIDE MISSIONS
+  if(S.sideMissions&&S.sideMissions.length){
+    const actSMs=S.sideMissions.filter(sm=>sm.status==='active');
+    if(actSMs.length){
+      html+=`<div class="section-lbl">MISSIONS ANNEXES ACTIVES</div>`;
+      actSMs.forEach((sm,idx)=>{
+        const realIdx=S.sideMissions.indexOf(sm);
+        html+=`<div class="side-mission-card"><div class="sm-player">${DISPLAY_NAMES[sm.playerIdx]}</div><div class="sm-desc">${sm.missionDesc}</div><div class="sm-bc">+${sm.bc} BC si reussie</div><div class="sm-btns"><button class="sm-ok" data-smidx="${realIdx}">&#10003; REUSSIE</button><button class="sm-fail" data-smidx="${realIdx}">&#10007; ECHOUEE</button></div></div>`;
+      });
+    }
+  }
   html+=`<div class="braddy-analyzing"><div class="adots"><div class="adot"></div><div class="adot"></div><div class="adot"></div></div><p>Brad analyse votre position actuelle</p></div>`;
   body.innerHTML=html;
 
@@ -430,6 +458,8 @@ function renderGages(){
   if(dtBtn){dtBtn.addEventListener('click',()=>{S.doneDT=true;save();beep(440,.5,.1,'sine');bradMsg("Double Trouble accompli. Le BRADDY3000 prend note. Bien joue.");checkPhase1Complete();renderGages();});}
   const launchBtn=document.getElementById('dt-launch-btn');
   if(launchBtn){launchBtn.addEventListener('click',openDTInterface);}
+  document.querySelectorAll('.sm-ok').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'reussi')));
+  document.querySelectorAll('.sm-fail').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'echoue')));
 }
 
 function checkPhase1Complete(){
@@ -569,17 +599,63 @@ function startMissionFromRoulette(){
 function applyRefaireRoue(agIdx){
   const ag=S.activeGages[agIdx];if(!ag)return;
   const pk=R_KEYS[ag.playerIdx];
+  const available=getPool(ag.phase).filter(id=>id!==ag.gageId).map(id=>getGageById(id)).filter(Boolean);
+  if(!available.length){bradMsg("Plus de gages disponibles pour Refaire la roue.");return;}
   S.coins[pk]-=20;S.stock.refaireRoue[pk]--;
   const cancelled=ag.gageId;
   returnToPool(ag.phase,cancelled);
   S.activeGages.splice(agIdx,1);save();
-  bradAnalyze(()=>{
-    const newId=drawFromPool(S.phase,cancelled);
-    if(!newId){save();renderGages();bradMsg('Plus de gages disponibles dans cette phase.');return;}
-    const newG=getGageById(newId);
-    addActiveGage(newId,ag.playerIdx);save();renderGages();
-    bradMsg(`Nouveau gage pour ${DISPLAY_NAMES[ag.playerIdx]} : "${newG?.name}". Le BRADDY3000 a recalibre la trajectoire.`);
-  });
+  bradAnalyze(()=>openGageWheel(available,ag.playerIdx,cancelled,ag.phase));
+}
+
+let gwAngle=0,gwSpinning=false;
+function openGageWheel(gages,playerIdx,excludeId,phase){
+  const ol=document.getElementById('gw-ol');if(!ol)return;
+  ol.classList.remove('hidden');
+  document.getElementById('gw-result').classList.add('hidden');
+  gwAngle=0;gwSpinning=false;
+  drawGageWheel(gwAngle,gages);
+  const colors=['#5a0000','#380000','#7a0000','#440000','#621000','#2d1000'];
+  function drawGageWheel(angle,gs){
+    const cv=document.getElementById('gw-cv');if(!cv)return;
+    const ctx=cv.getContext('2d'),W=cv.width,H=cv.height,cx=W/2,cy=H/2,r=Math.min(W,H)*.44,n=gs.length;
+    ctx.clearRect(0,0,W,H);
+    const seg=2*Math.PI/n;
+    for(let i=0;i<n;i++){
+      const sA=angle-Math.PI/2+i*seg-seg/2,eA=sA+seg,mA=sA+seg/2;
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,sA,eA);ctx.closePath();
+      ctx.fillStyle=colors[i%colors.length];ctx.fill();ctx.strokeStyle='rgba(204,0,0,.8)';ctx.lineWidth=2;ctx.stroke();
+      const name=gs[i].name.length>12?gs[i].name.slice(0,11)+'.':gs[i].name;
+      const tx=cx+Math.cos(mA)*r*.58,ty=cy+Math.sin(mA)*r*.58;
+      ctx.save();ctx.translate(tx,ty);ctx.rotate(mA+Math.PI/2);
+      ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(name,0,0);ctx.restore();
+    }
+    ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#cc0000';ctx.lineWidth=3;ctx.stroke();
+    ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='#cc0000';ctx.lineWidth=2;ctx.stroke();
+  }
+  // auto-spin
+  const n=gages.length,tgt=Math.floor(Math.random()*n),seg=2*Math.PI/n;
+  const tBase=(n-tgt)*seg;
+  const tot=tBase+(4+Math.floor(Math.random()*2))*2*Math.PI;
+  const dur=3500+Math.random()*1000,t0=performance.now();
+  (function anim(now){
+    const t=Math.min((now-t0)/dur,1);
+    gwAngle=(1-Math.pow(1-t,4))*tot;
+    drawGageWheel(gwAngle,gages);
+    if(t<1){requestAnimationFrame(anim);}
+    else{
+      gwSpinning=false;drawGageWheel(gwAngle,gages);
+      const chosen=gages[tgt];
+      S.pool[phase]=(getPool(phase)).filter(id=>id!==chosen.id);
+      addActiveGage(chosen.id,playerIdx);save();
+      flash(200,true);beep(880,.3,.1);
+      document.getElementById('gw-winner-name').textContent=chosen.name.toUpperCase();
+      document.getElementById('gw-winner-desc').textContent=chosen.desc;
+      document.getElementById('gw-result').classList.remove('hidden');
+      document.getElementById('gw-close-btn').onclick=()=>{ol.classList.add('hidden');renderGages();bradMsg(`Nouveau gage : "${chosen.name}" — ${DISPLAY_NAMES[playerIdx]} prend le relais.`);};
+    }
+  })(performance.now());
 }
 
 function applyGageSecondaire(agIdx){
@@ -606,23 +682,25 @@ function applyLaisserPasser(agIdx){
 /* GAGE SECONDAIRE */
 function openGageSecondaire(playerIdx){
   const available=SECONDARY_GAGES.filter(sg=>!(S.usedSgIds||[]).includes(sg.id));
-  if(!available.length){bradMsg("Aucun gage secondaire disponible. Le stock est epuise.");return;}
+  if(!available.length){bradMsg("Plus de gages secondaires disponibles. Le stock est epuise.");return;}
   const ol=document.getElementById('sg-ol');
   ol.classList.remove('hidden');
   document.getElementById('sg-status').textContent='';
   document.getElementById('sg-confirm-btn').classList.add('hidden');
   document.getElementById('sg-close').style.display='';
+  const stopBtn=document.getElementById('sg-stop-btn');
+  if(stopBtn){stopBtn.style.display='block';stopBtn.disabled=false;}
   const cardsEl=document.getElementById('sg-cards');
   cardsEl.innerHTML='';
-  available.slice(0,3).forEach((sg,i)=>{
+  const toShow=available.slice(0,4);
+  toShow.forEach(sg=>{
     const d=document.createElement('div');d.className='sg-card';
     d.innerHTML=`<div class="sg-front"><div class="sg-front-icon">?</div></div><div class="sg-back"><div class="sg-back-name">${sg.name}</div><div class="sg-back-desc">${sg.desc}</div><div class="sg-back-bc">+${sg.bc} BC</div></div>`;
     cardsEl.appendChild(d);
   });
   const cards=cardsEl.querySelectorAll('.sg-card');
   const cursor=document.getElementById('sg-cursor');
-  const targetIdx=Math.floor(Math.random()*available.length);
-  let curIdx=0,dir=1,ticks=0,maxTicks=30+Math.floor(Math.random()*10),chosen=null,scanning=true;
+  let curIdx=0,dir=1,scanning=true,stopped=false,chosen=null;
   cursor.style.opacity='1';
   function moveCursor(){
     cards.forEach((c,i)=>c.classList.toggle('sg-active',i===curIdx));
@@ -630,40 +708,54 @@ function openGageSecondaire(playerIdx){
     const cr=card.getBoundingClientRect(),wr=cardsEl.getBoundingClientRect();
     cursor.style.left=(cr.left-wr.left+cr.width/2-8)+'px';
   }
-  const baseInterval=80;
+  let speed=80;
   function scan(){
-    if(!scanning)return;
-    moveCursor();ticks++;
-    const t=ticks/maxTicks,delay=baseInterval+t*t*320;
-    if(ticks<maxTicks){
-      curIdx+=dir;
-      if(curIdx>=Math.min(available.length,3)){curIdx=Math.min(available.length,3)-2;dir=-1;}
-      if(curIdx<0){curIdx=1;dir=1;}
-      setTimeout(scan,delay);
-    } else {
-      // Land on target
-      curIdx=targetIdx;moveCursor();beep(440,.1,.1,'sine');
-      setTimeout(()=>{
-        scanning=false;cursor.style.opacity='0';
+    if(!scanning)return;moveCursor();
+    curIdx+=dir;
+    if(curIdx>=toShow.length){curIdx=toShow.length-2;dir=-1;}
+    if(curIdx<0){curIdx=1;dir=1;}
+    setTimeout(scan,speed);
+  }
+  scan();
+  // STOP button
+  const doStop=()=>{
+    if(stopped)return;stopped=true;scanning=false;
+    if(stopBtn)stopBtn.disabled=true;
+    const targetIdx=Math.floor(Math.random()*toShow.length);
+    let slowIdx=curIdx,slowDir=dir,slowSpeed=120;
+    function slowScan(){
+      moveCursor();
+      if(slowIdx===targetIdx&&slowSpeed>450){
+        cursor.style.opacity='0';
         cards[targetIdx].classList.add('sg-flipped');
         beep(660,.6,.12,'sine');flash(100);
-        chosen=available[targetIdx];
-        document.getElementById('sg-status').textContent=`Gage secondaire selectionne : ${chosen.name}`;
+        chosen=toShow[targetIdx];
+        document.getElementById('sg-status').textContent=`Gage secondaire : ${chosen.name}`;
         setTimeout(()=>{
           document.getElementById('sg-confirm-btn').classList.remove('hidden');
           document.getElementById('sg-close').style.display='none';
+          if(stopBtn)stopBtn.style.display='none';
           document.getElementById('sg-confirm-btn').onclick=()=>{
             if(!S.usedSgIds)S.usedSgIds=[];S.usedSgIds.push(chosen.id);
+            S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==chosen.id);
             addActiveGage(chosen.id,playerIdx);save();
             ol.classList.add('hidden');renderGages();
-            bradMsg(`Gage secondaire : "${chosen.name}". ${DISPLAY_NAMES[playerIdx]} prend le relais.`);
+            if(chosen.id==='sg3'){bradMsg('Pronostic en attente. Quand le participant obtient le score, ecrivez-le ici (ex: France 2 - 1 Italie).');}
+            else{bradMsg(`Gage secondaire "${chosen.name}" assigne a ${DISPLAY_NAMES[playerIdx]}. Le BRADDY3000 observe.`);}
           };
-        },1200);
-      },600);
+        },1500);
+        return;
+      }
+      slowIdx+=slowDir;
+      if(slowIdx>=toShow.length){slowIdx=toShow.length-2;slowDir=-1;}
+      if(slowIdx<0){slowIdx=1;slowDir=1;}
+      curIdx=slowIdx;slowSpeed=Math.min(slowSpeed+35,600);
+      setTimeout(slowScan,slowSpeed);
     }
-  }
-  setTimeout(scan,200);
-  document.getElementById('sg-close').onclick=()=>{scanning=false;cursor.style.opacity='0';ol.classList.add('hidden');renderGages();};
+    slowScan();
+  };
+  if(stopBtn)stopBtn.onclick=doStop;
+  document.getElementById('sg-close').onclick=()=>{scanning=false;stopped=true;cursor.style.opacity='0';if(stopBtn)stopBtn.style.display='none';ol.classList.add('hidden');renderGages();};
 }
 
 /* EVENT WHEEL */
@@ -728,96 +820,68 @@ function spinEventWheel(){
       document.getElementById('ev-result-desc').textContent=chosen.desc;
       document.getElementById('ev-result').classList.remove('hidden');
       bradMsg(`EVENEMENT BRADDY3000 : "${chosen.name}". ${chosen.desc}`);
+      applyEventEffect(chosen.id);
     }
   })(performance.now());
 }
 
-/* DOUBLE TIRAGE (bonus chaos) */
-let dt2Spinning=false,dt2Gage1=null,dt2Gage2=null,dt2Player1=-1,dt2Player2=-1;
-let dt2Angle1=0,dt2Angle2=0;
-
-function openDoubleTimbre(){
-  const pool=(getPool(S.phase));
-  if(pool.length<2){bradMsg("Pas assez de gages disponibles pour le Double Tirage. Minimum 2 gages requis.");return;}
-  const ol=document.getElementById('dt2-ol');ol.classList.remove('hidden');
-  document.getElementById('dt2-result').classList.add('hidden');
-  document.getElementById('dt2-spin-btn').disabled=false;
-  dt2Spinning=false;dt2Angle1=0;dt2Angle2=0;dt2Gage1=null;dt2Gage2=null;dt2Player1=-1;dt2Player2=-1;
-  const pl=getAvailPlayers();
-  drawRoulette(dt2Angle1,pl,document.getElementById('dt2-cv1'));
-  drawRoulette(dt2Angle2,pl,document.getElementById('dt2-cv2'));
+function applyEventEffect(evId){
+  if(evId==='ev1'){S.brouillageEnd=Date.now()+10*60*1000;save();setTimeout(()=>bradMsg("BROUILLAGE ACTIF. Pendant 10 minutes, tous les BC gagnes sont doubles. Profitez-en."),200);}
+  else if(evId==='ev2'){setTimeout(()=>bradMsg("TRANSMISSION PRIORITAIRE. Contrat BRADDY3000 — Synchronisation immediatement active. Deux participants doivent se tenir la main pendant 20 minutes. Maintenant."),200);}
+  else if(evId==='ev3'){S.primeNext=(S.primeNext||0)+10;save();setTimeout(()=>bradMsg("PRIME EXCEPTIONNELLE enregistree. Le prochain gage reussi rapportera +10 BC bonus. Le BRADDY3000 est genereux. Rarement, mais c'est le cas."),200);}
+  else if(evId==='ev4'){glitchSnd(.2);shake(3,1000);setTimeout(()=>bradMsg("DONNEES CORROMPUES. Le classement affiche pourrait etre temporairement inexact. Le score reel, lui, ne change pas."),200);}
+  else if(evId==='ev5'){const pool=getPool(S.phase);const nextG=pool.length?getGageById(pool[0]):null;setTimeout(()=>bradMsg(nextG?`ANALYSE ACCELEREE. Prochain gage disponible : "${nextG.name}". Vous etes en avance sur le programme.`:"ANALYSE ACCELEREE. Aucun gage disponible a reveler dans cette phase."),200);}
+  else if(evId==='ev6'){setTimeout(()=>bradMsg("MISSION SURPRISE. Les 4 agents doivent choisir une danse TikTok et l'executer ensemble. Duree minimale : 15 secondes. La honte est optionnelle mais recommandee par le BRADDY3000."),200);}
+  else if(evId==='ev7'){S.bradLostUntil=Date.now()+3*60*1000;save();setTimeout(()=>bradMsg("...je suis Brad. Ou peut-etre pas. Le BRADDY3000 semble avoir oublie quelque chose. Je vous contacterai quand j'aurai resolu le probleme."),200);}
+  else if(evId==='ev8'){S.glitchModeUntil=Date.now()+90*1000;save();glitchSnd(.25);let gc=0;const gi=setInterval(()=>{if(Date.now()>S.glitchModeUntil||gc>15){clearInterval(gi);document.body.style.transform='';return;}shake(Math.random()*6+2,150+Math.random()*200);glitchSnd(.15);if(Math.random()>.5)flash(40+Math.random()*80,Math.random()>.5);gc++;},3000+Math.random()*4000);setTimeout(()=>bradMsg("PARASITES DETECTES. Recalibration en cours... Aucun impact sur le gameplay. Le BRADDY3000 resist. En principe."),200);}
 }
 
-function spinDoubleTimbre(){
-  if(dt2Spinning)return;dt2Spinning=true;
-  document.getElementById('dt2-spin-btn').disabled=true;
-  const id1=drawFromPool(S.phase,null);
-  const id2=drawFromPool(S.phase,id1);
-  if(!id1||!id2){
-    if(id1)returnToPool(S.phase,id1);
-    bradMsg("Pas assez de gages disponibles.");document.getElementById('dt2-ol').classList.add('hidden');return;
-  }
-  dt2Gage1=getGageById(id1);dt2Gage2=getGageById(id2);
-  const pl=getAvailPlayers();
-  let done1=false,done2=false;
-  function tryFinish(){
-    if(!done1||!done2)return;
-    flash(200,true);beep(880,.3,.1);
-    addActiveGage(id1,dt2Player1);addActiveGage(id2,dt2Player2);save();
-    document.getElementById('dt2-name1').textContent=dt2Gage1?.name||'?';
-    document.getElementById('dt2-name2').textContent=dt2Gage2?.name||'?';
-    document.getElementById('dt2-result').classList.remove('hidden');
-  }
-  // Spin wheel 1 (player for gage1)
-  const seg=2*Math.PI/pl.length,t1=Math.floor(Math.random()*pl.length);
-  dt2Player1=pl[t1].idx;
-  const tBase1=(pl.length-t1)*seg;
-  const tot1=tBase1+(4+Math.floor(Math.random()*2))*2*Math.PI,t0=performance.now(),dur=3500+Math.random()*500;
-  // Spin wheel 2 (player for gage2 — different from wheel1 if possible)
-  const remaining=pl.filter(p=>p.idx!==dt2Player1);
-  const pl2=remaining.length?remaining:pl;
-  const t2=Math.floor(Math.random()*pl2.length);
-  dt2Player2=pl2[t2].idx;
-  const tBase2=(pl2.length-t2)*seg;
-  const tot2=tBase2+(4+Math.floor(Math.random()*2))*2*Math.PI,dur2=3500+Math.random()*500;
-  (function a1(now){const t=Math.min((now-t0)/dur,1);dt2Angle1=(1-Math.pow(1-t,4))*tot1;drawRoulette(dt2Angle1,pl,document.getElementById('dt2-cv1'));if(t<1)requestAnimationFrame(a1);else{done1=true;tryFinish();}})(performance.now());
-  (function a2(now){const t=Math.min((now-t0)/dur2,1);dt2Angle2=(1-Math.pow(1-t,4))*tot2;drawRoulette(dt2Angle2,pl2,document.getElementById('dt2-cv2'));if(t<1)requestAnimationFrame(a2);else{done2=true;tryFinish();}})(performance.now());
+/* MISSION PARALLELE (anciennement Double Tirage) */
+function openMissionParallele(payerKey){
+  if(!S.sideMissions)S.sideMissions=[];if(!S.usedSMIds)S.usedSMIds=[];
+  const available=SIDE_MISSIONS.filter(sm=>!S.usedSMIds.includes(sm.id));
+  if(!available.length){bradMsg("Plus de missions annexes disponibles. Toutes ont ete assignees.");return;}
+  const mission=available[Math.floor(Math.random()*available.length)];
+  S.usedSMIds.push(mission.id);
+  const payerIdx=R_KEYS.indexOf(payerKey);
+  S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:payerIdx,status:'active',bc:5});
+  save();renderGages();
+  bradAnalyze(()=>{bradMsg(`Analyse terminee. Une donnee supplementaire semble necessaire. Mission parallele transmise a ${DISPLAY_NAMES[payerIdx]} : "${mission.desc}" — +5 BC si reussie.`);});
 }
 
-/* IMPOSER UN GAGE */
-let imposerPayerKey=null,imposerTargetIdx=-1;
-function openImposer(){
-  const pool=(getPool(S.phase));
-  if(!pool.length){bradMsg("Aucun gage disponible a imposer dans cette phase.");return;}
+/* IMPOSER UNE MISSION (anciennement Imposer un Gage) */
+function openImposerMission(){
+  if(!S.sideMissions)S.sideMissions=[];if(!S.usedSMIds)S.usedSMIds=[];
+  const available=SIDE_MISSIONS.filter(sm=>!S.usedSMIds.includes(sm.id));
+  if(!available.length){bradMsg("Plus de missions annexes disponibles.");return;}
   const ol=document.getElementById('imposer-ol');ol.classList.remove('hidden');
   document.getElementById('imposer-step1').classList.remove('hidden');
   document.getElementById('imposer-step2').classList.add('hidden');
-  imposerTargetIdx=-1;
   const grid=document.getElementById('imposer-players');
   grid.innerHTML=DISPLAY_NAMES.map((n,i)=>`<button class="imposer-player-btn" data-pidx="${i}">${n}</button>`).join('');
   grid.querySelectorAll('.imposer-player-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
-      imposerTargetIdx=parseInt(btn.dataset.pidx);
-      document.getElementById('imposer-step1').classList.add('hidden');
-      document.getElementById('imposer-step2').classList.remove('hidden');
-      const gagesEl=document.getElementById('imposer-gages');
-      gagesEl.innerHTML=pool.map(gid=>{const g=getGageById(gid);return g?`<button class="imposer-gage-btn" data-gid="${gid}">${g.name} (+${g.bc} BC)</button>`:''}).join('');
-      gagesEl.querySelectorAll('.imposer-gage-btn').forEach(gb=>{
-        gb.addEventListener('click',()=>{
-          const gid=gb.dataset.gid;
-          S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gid);
-          addActiveGage(gid,imposerTargetIdx);save();
-          ol.classList.add('hidden');renderGages();
-          const g=getGageById(gid);
-          bradMsg(`Gage impose : "${g?.name}" a ${DISPLAY_NAMES[imposerTargetIdx]}. Le BRADDY3000 approuve cette decision. Le joueur cible peut toujours utiliser ses bonus.`);
-        });
-      });
+      const targetIdx=parseInt(btn.dataset.pidx);
+      const avail2=SIDE_MISSIONS.filter(sm=>!S.usedSMIds.includes(sm.id));
+      if(!avail2.length){ol.classList.add('hidden');bradMsg("Plus de missions annexes disponibles.");return;}
+      const mission=avail2[Math.floor(Math.random()*avail2.length)];
+      S.usedSMIds.push(mission.id);
+      S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:targetIdx,status:'active',bc:5});
+      save();ol.classList.add('hidden');renderGages();
+      bradMsg(`Mission annexe imposee a ${DISPLAY_NAMES[targetIdx]} : "${mission.desc}" — +5 BC si reussie.`);
     });
   });
 }
 
 /* BONUS MENU — CHAOS ROUTING */
+function getAvailableBonuses(phase){
+  if(phase===3)return['declencherEvenement'];
+  if(phase===4)return['refaireRoue','declencherEvenement'];
+  return['gageSecondaire','refaireRoue','laisserPasser','doubleTimbre','imposerGage','declencherEvenement'];
+}
 function openBonus(id){
+  const avail=getAvailableBonuses(S.phase);
+  if(!avail.includes(id)){bradMsg(`Ce bonus n'est pas disponible en Phase ${S.phase}. Brad s'y oppose formellement.`);return;}
   const chaosIds=['doubleTimbre','imposerGage','declencherEvenement'];
   if(chaosIds.includes(id)){
     // Chaos: need player to pay first via existing player select page
@@ -855,8 +919,8 @@ function confirmPurch(){
   S.coins[selPl]-=baseCost;S.stock[curBonus][selPl]--;save();
   document.getElementById('purchase-confirm').classList.add('hidden');
   goBack();
-  if(curBonus==='doubleTimbre'){bradAnalyze(()=>openDoubleTimbre());}
-  else if(curBonus==='imposerGage'){bradAnalyze(()=>openImposer());}
+  if(curBonus==='doubleTimbre'){openMissionParallele(selPl);}
+  else if(curBonus==='imposerGage'){bradAnalyze(()=>openImposerMission());}
   else if(curBonus==='declencherEvenement'){bradAnalyze(()=>openEvenementOverlay());}
 }
 function cancelPurch(){selPl=null;document.getElementById('purchase-confirm').classList.add('hidden');document.querySelectorAll('.player-btn').forEach(b=>b.classList.remove('selected'));}
@@ -912,6 +976,60 @@ function advancePhase(n){if(n<=S.phase)return;S.phase=n;S.phaseExcluded=[];S.wai
 /* DOSSIERS */
 const DOSS={kirby67:{title:'Kirby 67',content:`<div class="class-tag">CLASSIFICATION : ALPHA-ROUGE</div><h3>IDENTIFICATION</h3><p>Kirby 67 est le double maléfique de Kirby 54, capturé lors de l'Edition II. Niveau de malveillance : 94% selon le BRADDY3000.</p><h3>DERNIÈRE LOCALISATION</h3><p>Ville de Lille — signal perdu lors de son évasion.</p><h3>MOTIVATIONS</h3><p>Kirby 67 parle obsessionnellement d'un "Monde au Serrano".</p><p class="warn">NE PAS mentionner le Serrano en sa présence.</p><h3>NOTE DE BRAD BITT</h3><p class="warn">Si vous le trouvez, ne le nourrissez pas. Et surtout pas de Serrano.</p>`}};
 function renderDossiers(){const l=document.getElementById('dossiers-list');const rows=[{id:'kirby67',name:'Kirby 67',u:true},{id:'bb',name:'Brad Bitt',u:false},{id:'b3k',name:'BRADDY3000',u:false},{id:'inc',name:'Incidents précédents',u:false},{id:'arc',name:'Archives',u:false}];l.innerHTML=rows.map(d=>`<div class="dossier-row ${d.u?'unlocked':'locked'}" ${d.u?`data-dos="${d.id}"`:''}><span class="dossier-name">${d.name}</span><span class="dossier-badge ${d.u?'open':'closed'}">${d.u?'DÉBLOQUÉ':'&#128274; ACCÈS REFUSÉ'}</span></div>`).join('');document.querySelectorAll('.dossier-row.unlocked').forEach(r=>r.addEventListener('click',()=>{const d=DOSS[r.dataset.dos];if(!d)return;document.getElementById('dd-title').textContent=d.title;document.getElementById('dd-body').innerHTML=d.content;nav('dossier-detail');}));}
+
+
+/* CHAT */
+const RESPONSES={kirby:["Excellente question. J'aimerais egalement le savoir.","Kirby 67 est quelque part. Le BRADDY3000 analyse."],mission:["Si je vous le disais, ce ne serait plus une mission.","Les missions se revelent d'elles-memes. Comme moi."],gage:["Chaque gage accompli rapproche le BRADDY3000 de la verite.","Le gage est votre destinee. Embrassez-la."],bonjour:["Ah. Vous voila.","Salutations.","Je savais que vous repasseriez."],salut:["Salut. Revenons aux affaires.","Hmm. Salut."],serrano:["Ne. Prononcez. Pas. Ce. Mot.","...Je vous surveille."],grille:["Mon grille-pain est temporairement indisponible."],brad:["C'est moi.","Vous avez mentionne mon nom. Je suis mefiant."],merci:["Le BRADDY3000 prend note de votre gratitude."],raclette:["Sujet delicat. Continuons.","Le BRADDY3000 enregistre votre interet culinaire."],coin:["Les Brad Coins sont une monnaie reconnue dans 0 pays.","Le BRADDY3000 recommande la richesse."],coupe:["Je pense que c'est moi, oui, je me sens equipe de foot de temps en temps.","Kirby 67 supporte la mauvaise equipe. C'est tout ce que je dirai."],foot:["Je me sens equipe de foot de temps en temps, oui.","Football ? Le BRADDY3000 prefere les sports ou on porte des lunettes."],france:["Je vis a Lille depuis une duree indeterminee.","La France est un beau pays. Kirby 67 y est quelque part."],ia:["Je suis Brad Bitt, pas une IA.","Le BRADDY3000 est offense par cette insinuation."],chatgpt:["Qui ? Je ne connais pas cette personne.","ChatGPT ne recherche pas Kirby 67. Moi si. C'est un avantage."],splatoon:["Je ne joue pas aux jeux video. Je suis deja en mission permanente."],oui:["Bien. Le BRADDY3000 enregistre votre accord.","Voila une reponse acceptable."],non:["Le BRADDY3000 desapprouve. Legerement.","Non ? Le BRADDY3000 note votre rebellion."],pourquoi:["Excellente question. Brad Bitt n'a pas toujours de reponse."],aide:["Tapez /liste pour les commandes. Pour le reste, je suis la."]};
+const FALLBACK=["Interessant. Le BRADDY3000 prend note.","Hmm. Je n'ai pas de reponse claire a cela.","Le BRADDY3000 analyse votre message. Resultat : confus.","Votre message a ete recu, archive et partiellement incompris.","Je pourrais repondre. Mais je choisirais de ne pas le faire.","La reponse est 42. Ou peut-etre 67.","Notez que je ne suis pas un assistant. Je suis Brad Bitt.","Le BRADDY3000 a plante sur cette requete. Reessayez."];
+function addUserMsg(txt){const m=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='chat-msg';d.innerHTML=`<div class="msg-label">Vous</div><div class="msg-sep">—</div><div class="msg-text">${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;S.chatHistory.push({type:'user',text:txt});save();}
+function bradMsg(txt){const m=document.getElementById('chat-msgs'),ty=document.getElementById('chat-typing');ty.classList.remove('hidden');m.scrollTop=m.scrollHeight;setTimeout(()=>{ty.classList.add('hidden');const d=document.createElement('div');d.className='chat-msg brad-msg';d.innerHTML=`<div class="msg-label brad pacifico">Brad Bitt</div><div class="msg-sep">—</div><div class="msg-text">${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;S.chatHistory.push({type:'brad',text:txt});const chatPg=document.getElementById('page-chat');if(!chatPg.classList.contains('on')){S.chatBadge=(S.chatBadge||0)+1;updateBadge();}save();},1000+txt.length*15);}
+function renderHistory(){const m=document.getElementById('chat-msgs');m.innerHTML='';S.chatHistory.forEach(h=>{const d=document.createElement('div');if(h.type==='user'){d.className='chat-msg';d.innerHTML=`<div class="msg-label">Vous</div><div class="msg-sep">—</div><div class="msg-text">${esc(h.text)}</div>`;}else{d.className='chat-msg brad-msg';d.innerHTML=`<div class="msg-label brad pacifico">Brad Bitt</div><div class="msg-sep">—</div><div class="msg-text">${esc(h.text)}</div>`;}m.appendChild(d);});setTimeout(()=>m.scrollTop=m.scrollHeight,60);}
+function updateBadge(){const b=document.getElementById('chat-badge');if(!b)return;b.textContent=S.chatBadge>0?S.chatBadge:'';b.style.display=S.chatBadge>0?'flex':'none';}
+function addSysMsg(txt){const m=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='chat-msg sys-msg';d.innerHTML=`<div class="msg-text">> ${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
+function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.value.trim();if(!txt)return;inp.value='';
+  if(S.waitingForDelete){
+    if(txt.toLowerCase()==='oui'){S.waitingForDelete=false;save();addUserMsg(txt);bradMsg("Tres bien. Je t'aurais prevenu. Lancement de la procedure de reinitialisation...");setTimeout(launchResetAnimation,1800);return;}
+    else{S.waitingForDelete=false;save();bradMsg("Reinitialisation annulee. Sage decision.");}
+  }
+  if(S.waitingForOui&&txt.toLowerCase()==='oui'){
+    S.waitingForOui=false;save();addUserMsg(txt);
+    setTimeout(()=>{advancePhase(1);bradMsg("Parfait. Que le chaos commence. De maniere organisee. En theorie. Le BRADDY3000 active la Phase 1. Bonne chance.");},500);
+    return;
+  }
+  if(txt==='/admin.p1'){advancePhase(1);addSysMsg('Phase 1 deverouille.');return;}
+  if(txt==='/admin.p2'){advancePhase(2);addSysMsg('Phase 2 deverouille.');return;}
+  if(txt==='/admin.p3'){advancePhase(3);addSysMsg('Phase 3 deverouille.');return;}
+  if(txt==='/admin.p4'){advancePhase(4);addSysMsg('Phase 4 deverouille.');return;}
+  if(txt==='/admin.p5'){advancePhase(5);addSysMsg('Phase 5 deverouille.');return;}
+  if(txt==='/admin.coins'){Object.keys(S.coins).forEach(p=>S.coins[p]+=5);save();addSysMsg('+5 BC pour tous.');return;}
+  if(txt==='/admin.reset'){if(confirm('Reinitialiser ?')){localStorage.removeItem('n2s3');location.reload();}return;}
+  if(txt==='/delete'){addUserMsg(txt);bradMsg("Oh Waouh. Tu es sur de vouloir faire ca ? Je veux dire... ca rigole pas ce genre de chose. Toutes les donnees. Les BradCoins. Les gages. Tout. Tape \"oui\" si tu es vraiment sur.");S.waitingForDelete=true;save();return;}
+  if(txt==='/debug'){const ph=PHASES[Math.min(S.phase,5)];const ag=(S.activeGages||[]).map(a=>`${a.gageName}(${DISPLAY_NAMES[a.playerIdx]})`).join(', ')||'aucun';addSysMsg(`Phase ${S.phase} | H:${S.coins.hippolyte} T:${S.coins.teo} E:${S.coins.edwin} N:${S.coins.nathanael} BC`);addSysMsg(`Actifs : ${ag}`);addSysMsg(`Brouillage: ${S.brouillageEnd&&Date.now()<S.brouillageEnd?'ACTIF':'off'} | Prime next: ${S.primeNext||0}`);return;}
+  if(txt==='/debug.gages'){PHASES.forEach((ph,i)=>{if(ph.gages?.length)ph.gages.forEach(g=>{addSysMsg(`P${i} ${S.doneGages?.includes(g.id)?'✓':'○'} ${g.id} — ${g.name}`);});});return;}
+  if(txt==='/debug.coins'){addSysMsg(`H:${S.coins.hippolyte} | T:${S.coins.teo} | E:${S.coins.edwin} | N:${S.coins.nathanael}`);return;}
+  if(txt==='/debug.reset.gages'){S.doneGages=[];S.activeGages=[];S.gageHistory=[];S.pool={};save();renderGages();addSysMsg('Gages et pool reinitialises.');return;}
+  if(txt==='/liste'){addSysMsg('=== TOUTES LES COMMANDES ===');addSysMsg('/liste — cette liste');addSysMsg('/debug — etat (phase/BC/actifs/effets)');addSysMsg('/debug.gages — tous gages par phase');addSysMsg('/debug.coins — soldes BradCoins');addSysMsg('/debug.reset.gages — reinitialise tout');addSysMsg('/add.coins:H:50 — ajouter BC (H/T/E/N)');addSysMsg('/test.gage p1g1 — tester roulette');addSysMsg('/test.mission p1g1 — ouvrir mission');addSysMsg('/admin.p1 a /admin.p5 — debloquer phase');addSysMsg('/admin.coins — +5 BC tous');addSysMsg('/admin.reset — reset complet');addSysMsg('/delete — reset cinematique Brad');return;}
+  if(txt.startsWith('/add.coins:')){const pts=txt.split(':');if(pts.length===3){const ltr=pts[1].toUpperCase(),amt=parseInt(pts[2]);const pm={'H':'hippolyte','T':'teo','E':'edwin','N':'nathanael'};const pk=pm[ltr];if(pk&&!isNaN(amt)&&amt>0){S.coins[pk]=(S.coins[pk]||0)+amt;save();addSysMsg(`+${amt} BC → ${DISPLAY_NAMES[R_KEYS.indexOf(pk)]}`);renderBraddy();}else addSysMsg('Format: /add.coins:H:50 — H T E N');}return;}
+  if(txt.startsWith('/test.gage ')){const gid=txt.slice(11).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST ROULETTE — ${found.name}`);setTimeout(()=>openRoulette(found),300);}else addSysMsg(`Gage "${gid}" introuvable. (ex: p1g1, p2g3, p5g4)`);return;}
+  if(txt.startsWith('/test.mission ')){const gid=txt.slice(14).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST MISSION — ${found.name}`);openMission(found,Math.floor(Math.random()*4));}else addSysMsg(`Gage introuvable.`);return;}
+  const upper=txt.toUpperCase();if(CFG.phaseCodes[upper]!==undefined){advancePhase(CFG.phaseCodes[upper]);addSysMsg(`CODE VALIDE — Phase ${CFG.phaseCodes[upper]} deverouilee.`);return;}
+  // sg3 pronostic detection
+  if((S.activeGages||[]).some(ag=>ag.gageId==='sg3')&&/\d+\s*-\s*\d+/.test(txt)){
+    addUserMsg(txt);
+    bradMsg("Pronostic enregistre. Les modeles predictifs du BRADDY3000 viennent d'etre mis a jour. En cas de victoire francaise, je considererai officiellement votre intuition comme une technologie de pointe.");
+    return;
+  }
+  // bradLostUntil check
+  if(S.bradLostUntil&&Date.now()<S.bradLostUntil){
+    addUserMsg(txt);
+    const lost=["...ou suis-je.","RECALIBRATION ERREUR 404","Kirby 67 a peut-etre pirate ce canal.","beep.","Signal recu. Signal incompris.","Non. Oui. Je ne sais pas.","...","Je cherche mes lunettes."];
+    bradMsg(lost[Math.floor(Math.random()*lost.length)]);return;
+  }
+  addUserMsg(txt);const lower=txt.toLowerCase();let resp=null;
+  for(const[kw,rs]of Object.entries(RESPONSES)){if(lower.includes(kw)){resp=rs[Math.floor(Math.random()*rs.length)];break;}}
+  if(!resp)resp=FALLBACK[Math.floor(Math.random()*FALLBACK.length)];
+  bradMsg(resp);
+}
 
 /* DOUBLE TROUBLE INTERFACE */
 function openDTInterface(){
