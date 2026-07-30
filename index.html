@@ -252,6 +252,7 @@
     <div id="sg-cards"></div>
   </div>
   <p id="sg-status" class="sg-status"></p>
+  <button id="sg-stop-btn" class="sg-stop-btn">&#9632; ARRETER</button>
   <button id="sg-confirm-btn" class="sg-confirm-btn hidden">Confirmer &#8594;</button>
   <button id="sg-close" class="sg-cancel">&#8592; Annuler</button>
 </div>
@@ -309,6 +310,25 @@
     <div id="imposer-gages"></div>
   </div>
   <button id="imposer-close" class="roll-pre-close" style="margin-top:16px">&#8592; Annuler</button>
+</div>
+
+<!-- GAGE WHEEL (Refaire la Roue) -->
+<div id="gw-ol" class="full-ol hidden">
+  <div class="roll-top">
+    <span class="roll-phase-lbl">REFAIRE LA ROUE</span>
+    <h3 class="roll-gname">Selection du nouveau gage...</h3>
+    <p class="roll-gdesc">La roue contient les gages encore disponibles de cette phase.</p>
+  </div>
+  <div class="roll-wheel-wrap">
+    <div class="roll-ptr">&#9660;</div>
+    <canvas id="gw-cv" width="280" height="280"></canvas>
+  </div>
+  <div id="gw-result" class="hidden">
+    <p class="roll-winner-label">NOUVEAU GAGE ASSIGNE</p>
+    <p id="gw-winner-name" class="roll-winner-name">—</p>
+    <p id="gw-winner-desc" class="roll-gdesc" style="margin-top:8px"></p>
+    <div class="roll-result-btns"><button id="gw-close-btn">&#9658; COMMENCER LA MISSION</button></div>
+  </div>
 </div>
 
 <!-- BRADDY ANALYZE -->
