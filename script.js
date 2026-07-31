@@ -188,8 +188,8 @@ function completeSideMission(smIdx, status){
   if(!S.sideMissions)return;
   const sm=S.sideMissions.find((_,i)=>i===smIdx);if(!sm)return;
   sm.status=status;
-  if(status==='reussi'){S.coins[R_KEYS[sm.playerIdx]]=(S.coins[R_KEYS[sm.playerIdx]]||0)+sm.bc;save();bradMsg(`Mission annexe reussie par ${DISPLAY_NAMES[sm.playerIdx]}. +${sm.bc} BC credites. Le BRADDY3000 approuve.`);}
-  else{save();bradMsg(`Mission annexe echouee. Le BRADDY3000 est... comprenhensif. Presque.`);}
+  if(status==='reussi'){S.coins[R_KEYS[sm.playerIdx]]=(S.coins[R_KEYS[sm.playerIdx]]||0)+sm.bc;save();bradMsg(`Mission annexe réussie par ${DISPLAY_NAMES[sm.playerIdx]}. +${sm.bc} BC crédités. Le BRADDY3000 approuve.`);}
+  else{save();bradMsg(`Mission annexe échouée. Le BRADDY3000 est... compréhensif. Presque.`);}
   save();renderGages();
 }
 
@@ -363,7 +363,7 @@ function renderGages(){
     html+=`<div class="section-lbl">EN COURS</div>`;
     S.activeGages.forEach((ag,idx)=>{
       const pk=R_KEYS[ag.playerIdx],bc=S.coins[pk]||0;
-      const canRef=(S.stock.refaireRoue?.[pk]||0)>0&&bc>=20;
+      const canRef=(S.stock.refaireRoue?.[pk]||0)>0&&bc>=20&&S.phase!==5;
       const canSec=(S.stock.gageSecondaire?.[pk]||0)>0&&bc>=15&&SECONDARY_GAGES.filter(s=>!(S.usedSgIds||[]).includes(s.id)).length>0;
       const canPass=(S.stock.laisserPasser?.[pk]||0)>0&&bc>=25;
       html+=`<div class="active-gage-card" data-idx="${idx}">
@@ -372,7 +372,7 @@ function renderGages(){
         <div class="ag-player">Agent : ${DISPLAY_NAMES[ag.playerIdx]}</div>
         <div class="ag-time">Debut : ${ag.startTime}</div>
         ${(canRef||canSec||canPass)?`<div class="ag-bonus-row">${canRef?`<button class="ag-mini-btn" data-agbonus="refaire" data-idx="${idx}">&#8635; Refaire (20BC)</button>`:''}${canSec?`<button class="ag-mini-btn ag-sg" data-agbonus="secondaire" data-idx="${idx}">&#9733; Secondaire (15BC)</button>`:''}${canPass?`<button class="ag-mini-btn ag-pass" data-agbonus="passer" data-idx="${idx}">&#8856; Passer (25BC)</button>`:''}</div>`:''}
-        <div class="ag-main-btns"><button class="ag-ok" data-idx="${idx}">&#10003; REUSSI</button><button class="ag-fail" data-idx="${idx}">&#10007; ECHOUE</button></div>
+        <div class="ag-main-btns"><button class="ag-ok" data-idx="${idx}">&#10003; RÉUSSI</button><button class="ag-fail" data-idx="${idx}">&#10007; ÉCHOUÉ</button></div>
       </div>`;
     });
   }
@@ -392,19 +392,26 @@ function renderGages(){
   if(ph.dt){
     const pDone=!ph.gages?.length||ph.gages.every(g=>S.doneGages?.includes(g.id));
     const doneN=(ph.gages||[]).filter(g=>S.doneGages?.includes(g.id)).length,totN=(ph.gages||[]).length;
-    if(!pDone){html+=`<div class="dt-block dt-locked"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-locked-body"><p class="dt-locked-q">???</p><p class="dt-locked-hint">Se deverouille apres ${totN} gages accomplis — ${doneN}/${totN}</p></div></div>`;}
-    else if(!S.doneDT){html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">EQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">EQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><button class="dt-launch-btn" id="dt-launch-btn">&#9654; LANCER LE DOUBLE TROUBLE</button><button class="dt-complete-btn" id="dt-done-btn">&#10003; MARQUER COMME ACCOMPLI</button></div>`;}
-    else{html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">EQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">EQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><div class="dt-done-lbl">&#10003; DOUBLE TROUBLE ACCOMPLI</div></div>`;}
+    if(!pDone){html+=`<div class="dt-block dt-locked"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-locked-body"><p class="dt-locked-q">???</p><p class="dt-locked-hint">Se déverrouille après ${totN} gages accomplis — ${doneN}/${totN}</p></div></div>`;}
+    else if(!S.doneDT&&S.dtGoTime>0){
+      // DT in progress - show live timer
+      const dtEl=Math.floor((Date.now()-S.dtGoTime)/1000);const dtMM=String(Math.floor(dtEl/60)).padStart(2,'0'),dtSS=String(dtEl%60).padStart(2,'0');
+      const tAN=(S.dtTeamA||[]).map(i=>DISPLAY_NAMES[i]).join(' & ')||'Équipe A';
+      const tBN=(S.dtTeamB||[]).map(i=>DISPLAY_NAMES[i]).join(' & ')||'Équipe B';
+      html+=`<div class="dt-block dt-in-progress"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE EN COURS ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">FROMAGE</div><div class="dt-team-desc">${tAN}</div></div><div class="dt-team"><div class="dt-team-name">CHARCUTERIE</div><div class="dt-team-desc">${tBN}</div></div></div><div class="dt-chrono" id="dt-live-chrono">CHRONO : ${dtMM}:${dtSS}</div><button class="dt-complete-btn" id="dt-done-btn">&#10003; MARQUER COMME ACCOMPLI</button></div>`;
+    }
+    else if(!S.doneDT){html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">ÉQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">ÉQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><button class="dt-launch-btn" id="dt-launch-btn">&#9654; LANCER LE DOUBLE TROUBLE</button><button class="dt-complete-btn" id="dt-done-btn">&#10003; MARQUER COMME ACCOMPLI</button></div>`;}
+    else{html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">ÉQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">ÉQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><div class="dt-done-lbl">&#10003; DOUBLE TROUBLE ACCOMPLI</div></div>`;}
   }
 
   // CONTRACTS
   const contractsLocked=!!(ph.dt&&!S.doneDT);
   if(ph.contracts&&ph.contracts.length){
     html+=`<div class="contracts-section"><div class="contracts-title">CONTRATS BRADDY3000</div>`;
-    if(contractsLocked){html+=`<div class="contract-locked"><p class="contract-locked-q">???</p><p class="contract-locked-hint">Se deverouille apres le Double Trouble</p></div>`;}
+    if(contractsLocked){html+=`<div class="contract-locked"><p class="contract-locked-q">???</p><p class="contract-locked-hint">Se déverrouille après le Double Trouble</p></div>`;}
     else{
       ph.contracts.forEach((c,ci)=>{
-        const isSynchro=c.name.includes('Synchronisation');
+        const isSynchro=c.name.includes('Synchronisation')||c.name.includes('Satellite')||c.name.includes('Prioritaire')||c.name.includes('Serrano');
         if(isSynchro){
           const ct=S.contractTimer;
           const now=Date.now();
@@ -431,7 +438,8 @@ function renderGages(){
     html+=`<div class="section-lbl">HISTORIQUE</div>`;
     [...S.gageHistory].reverse().forEach(h=>{
       const cls=h.status==='reussi'?'hist-ok':h.status==='echoue'?'hist-fail':'hist-pass';
-      html+=`<div class="hist-item ${cls}"><div class="hist-name">${h.gageName}</div><div class="hist-meta">${h.playerName} — Ph.${h.phase} — ${h.endTime}</div><div class="hist-status">${h.status.toUpperCase()}${h.bc>0?` +${h.bc} BC`:''}</div></div>`;
+      const statusLabel={'reussi':'RÉUSSI','echoue':'ÉCHOUÉ','passe':'PASSÉ'}[h.status]||h.status.toUpperCase();
+      html+=`<div class="hist-item ${cls}"><div class="hist-name">${h.gageName}</div><div class="hist-meta">${h.playerName} — Ph.${h.phase} — ${h.endTime}</div><div class="hist-status">${statusLabel}${h.bc>0?` +${h.bc} BC`:''}</div></div>`;
     });
   }
 
@@ -442,7 +450,7 @@ function renderGages(){
       html+=`<div class="section-lbl">MISSIONS ANNEXES ACTIVES</div>`;
       actSMs.forEach((sm,idx)=>{
         const realIdx=S.sideMissions.indexOf(sm);
-        html+=`<div class="side-mission-card"><div class="sm-player">${DISPLAY_NAMES[sm.playerIdx]}</div><div class="sm-desc">${sm.missionDesc}</div><div class="sm-bc">+${sm.bc} BC si reussie</div><div class="sm-btns"><button class="sm-ok" data-smidx="${realIdx}">&#10003; REUSSIE</button><button class="sm-fail" data-smidx="${realIdx}">&#10007; ECHOUEE</button></div></div>`;
+        html+=`<div class="side-mission-card"><div class="sm-player">${DISPLAY_NAMES[sm.playerIdx]}</div><div class="sm-desc">${sm.missionDesc}</div><div class="sm-bc">+${sm.bc} BC si reussie</div><div class="sm-btns"><button class="sm-ok" data-smidx="${realIdx}">&#10003; RÉUSSIE</button><button class="sm-fail" data-smidx="${realIdx}">&#10007; ÉCHOUÉE</button></div></div>`;
       });
     }
   }
@@ -493,6 +501,11 @@ function renderGages(){
     });
   });
 
+  // DT live chrono
+  const dtChronoEl=document.getElementById('dt-live-chrono');
+  if(dtChronoEl&&S.dtGoTime>0&&!S.doneDT){
+    const dtTick2=setInterval(()=>{const el=document.getElementById('dt-live-chrono');if(!el){clearInterval(dtTick2);return;}const e=Math.floor((Date.now()-S.dtGoTime)/1000);const m=String(Math.floor(e/60)).padStart(2,'0'),s=String(e%60).padStart(2,'0');el.textContent='CHRONO : '+m+':'+s;},1000);
+  }
   const dtBtn=document.getElementById('dt-done-btn');
   if(dtBtn){dtBtn.addEventListener('click',()=>{S.doneDT=true;save();beep(440,.5,.1,'sine');bradMsg("Double Trouble accompli. Le BRADDY3000 prend note. Bien joue.");checkPhase1Complete();renderGages();});}
   const launchBtn=document.getElementById('dt-launch-btn');
@@ -721,6 +734,8 @@ function openCommandeControlee(clientIdx,gage){
         addActiveGage(gage.id,clientIdx);save();ov.remove();renderGages();showPage('gages');
         bradMsg(`Commande Controlee : ${DISPLAY_NAMES[clientIdx]} est le CLIENT (choisit uniquement la taille). ${op.name} est l'OPERATEUR (choisit le reste du repas). Le BRADDY3000 observe la chaine de commandement.`);
       });
+      // Add Fermer button
+      const ccFermer=document.createElement('button');ccFermer.textContent='← Fermer';ccFermer.style.cssText='font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);padding:8px 24px;border:1px solid rgba(255,255,255,.1);margin-top:8px;display:block;';ccFermer.onclick=()=>{ov.remove();renderGages();showPage('gages');};ov.appendChild(ccFermer);
     }
   })(performance.now());
 }
@@ -1007,6 +1022,7 @@ function openImposerMission(){
 function getAvailableBonuses(phase){
   if(phase===3)return['declencherEvenement'];
   if(phase===4)return['refaireRoue','declencherEvenement'];
+  if(phase===5)return['gageSecondaire','laisserPasser','doubleTimbre','imposerGage','declencherEvenement'];
   return['gageSecondaire','refaireRoue','laisserPasser','doubleTimbre','imposerGage','declencherEvenement'];
 }
 function openBonus(id){
@@ -1176,7 +1192,9 @@ function updateBadge(){const b=document.getElementById('chat-badge');if(!b)retur
 function addSysMsg(txt){const m=document.getElementById('chat-msgs');const d=document.createElement('div');d.className='chat-msg sys-msg';d.innerHTML=`<div class="msg-text">> ${esc(txt)}</div>`;m.appendChild(d);m.scrollTop=m.scrollHeight;}
 function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.value.trim();if(!txt)return;inp.value='';
   if(S.waitingForDelete){
-    if(txt.toLowerCase()==='oui'){S.waitingForDelete=false;save();addUserMsg(txt);bradMsg("Tres bien. Je t'aurais prevenu. Lancement de la procedure de reinitialisation...");setTimeout(launchResetAnimation,1800);return;}
+    if(txt.toLowerCase()==='oui'){S.waitingForDelete=false;save();addUserMsg(txt);bradMsg("Tres bien. Je t'aurais prevenu. Lancement de la procedure de reinitialisation...");
+    localStorage.removeItem('n2s3');
+    setTimeout(launchResetAnimation,1800);return;}
     else{S.waitingForDelete=false;save();bradMsg("Reinitialisation annulee. Sage decision.");}
   }
   if(S.waitingForOui&&txt.toLowerCase()==='oui'){
@@ -1224,12 +1242,12 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
 const AIDE={
   lore:{title:"Le LORE",body:"<h3>Le LORE</h3><p>L'Operation Never 2 sans 3 est la 3e edition. Le BRADDY3000 coordonne l'ensemble. Kirby 67 a ete repere a Lille. Votre mission : collecter des donnees via les gages pour l'identifier.</p><p class='warn'>Brad Bitt Corporation ne garantit pas que tout cela ait un sens.</p>"},
   gages:{title:"Les Gages",body:"<h3>Les Gages</h3><p>Phases 1-4 : la roulette designe le participant. Phase 5 : Brad attribue directement. Un gage en cours apparait dans la section <span class='brand'>EN COURS</span>. Reussi : +BC. Echoue : rien. Brad note.</p>"},
-  doubleTrouble:{title:"Double Trouble",body:"<h3>Double Trouble</h3><p>Se deverrouille quand tous les gages individuels de la Phase 1 sont accomplis. Deux equipes s'affrontent : Fromage contre Charcuterie. Premiere equipe revenue : +5 BC par participant.</p>"},
+  doubleTrouble:{title:"Double Trouble",body:"<h3>Double Trouble</h3><p>Se déverrouille quand tous les gages individuels de la Phase 1 sont accomplis. Deux equipes s'affrontent : Fromage contre Charcuterie. Premiere equipe revenue : +5 BC par participant.</p>"},
   chat:{title:"Le CHAT",body:"<h3>Le CHAT</h3><p>Brad repond a certains mots-cles. Tapez <span class='brand'>/liste</span> pour toutes les commandes. En cas de reponses bizarres : l'evenement BRAD EST PERDU est peut-etre actif.</p>"},
   bonus:{title:"Les Bonus",body:"<h3>Les Bonus</h3><p><strong>Gage secondaire (15 BC)</strong> : remplace votre gage par un gage pioche parmi 4 cartes mystere. Bouton sur la carte de gage actif.</p><p><strong>Refaire la roue (20 BC)</strong> : votre gage retourne dans le pool, un nouveau est tire. Personnel uniquement.</p><p><strong>Laisser Passer (25 BC)</strong> : ignore definitivement votre gage. 0 BC.</p><p><strong>Mission Parallele (25 BC)</strong> : mini-mission annexe en parallele. +5 BC si reussie.</p><p><strong>Imposer une Mission (30 BC)</strong> : assigne une mission annexe a un autre joueur.</p><p><strong>Declencher un evenement (50 BC)</strong> : roue speciale avec 8 effets (BC doubles, parasites, Brad perdu...). Disponibles selon la phase.</p>"},
   monnaie:{title:"La Monnaie",body:"<h3>Les BradCoins</h3><p>Gage individuel : +5 BC. Phase 5 : +10 BC. Mission annexe : +5 BC. Le Brouillage double les BC pendant 10 min. Depenses : bonus shop.</p>"},
   braddy3000:{title:"Le BRADDY3000",body:"<h3>Le BRADDY3000</h3><p>Systeme de surveillance et d'analyse de Brad Bitt. Localise Kirby 67, gere les gages, calcule les BC. Fiabilite : entre 3% et 98%. Les ingenieurs travaillent sur le probleme. Depuis longtemps.</p>"},
-  dossiers:{title:"Les Dossiers",body:"<h3>Les Dossiers</h3><p>Se deverrouillent progressivement : Kirby 67 (debut) — Brad Bitt (Ph.1) — BRADDY3000 (Ph.2) — Incidents (Ph.3) — Archives (Ph.5).</p>"}
+  dossiers:{title:"Les Dossiers",body:"<h3>Les Dossiers</h3><p>Se déverrouillent progressivement : Kirby 67 (debut) — Brad Bitt (Ph.1) — BRADDY3000 (Ph.2) — Incidents (Ph.3) — Archives (Ph.5).</p>"}
 };
 function openAide(id){const d=AIDE[id];if(!d)return;document.getElementById('ad-title').textContent=d.title;document.getElementById('ad-body').innerHTML=d.body;nav('aide-detail');}
 
@@ -1313,7 +1331,7 @@ function launchResetAnimation(){
   document.body.appendChild(ov);
   const lines=['> BRADDY3000 — PROCÉDURE DE RÉINITIALISATION INITIALISÉE...','> Déconnexion des agents en cours...','> Suppression des BradCoins. Toutes les richesses disparaissent.','> Effacement des gages accomplis. Impressionnant, mais terminé.','> MODE USINE BRAD™ ACTIVÉ.','> Kirby 67 est temporairement libre. Surveillez vos arrières.','> Données de localisation effacées.','> Je ne suis pas responsable de ce qui suit.','> Suppression de mes propres souvenirs... (ça fait un peu mal)','> Effacement du chat. Oubli mutuel.','> BRADDY3000 REBOOT EN COURS...','> .','> ..','> ...','> AU REVOIR.'];
   let i=0;
-  const next=()=>{if(i>=lines.length){setTimeout(()=>{localStorage.removeItem('n2s3');location.reload();},900);return;}const p=document.createElement('p');p.textContent=lines[i];p.style.cssText='color:rgba(0,255,65,.8);font-size:11px;letter-spacing:.25em;margin:3px 0;opacity:0;transition:opacity .15s;';ov.insertBefore(p,ov.firstChild);setTimeout(()=>p.style.opacity='1',20);beep(180+Math.random()*200,.05,.05,'square');i++;setTimeout(next,lines[i-1].startsWith('> .')?350:300);};
+  const next=()=>{if(i>=lines.length){setTimeout(()=>{localStorage.removeItem('n2s3');S=loadState();location.reload();},900);return;}const p=document.createElement('p');p.textContent=lines[i];p.style.cssText='color:rgba(0,255,65,.8);font-size:11px;letter-spacing:.25em;margin:3px 0;opacity:0;transition:opacity .15s;';ov.insertBefore(p,ov.firstChild);setTimeout(()=>p.style.opacity='1',20);beep(180+Math.random()*200,.05,.05,'square');i++;setTimeout(next,lines[i-1].startsWith('> .')?350:300);};
   flash(300,true);setTimeout(next,500);
 }
 
