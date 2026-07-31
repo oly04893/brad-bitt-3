@@ -136,11 +136,10 @@
       <div class="page-hdr"><button class="back-btn">&#8592;</button><h2 id="bd-title" class="page-title pirata">Bonus</h2></div>
       <p id="bd-desc" class="bd-desc"></p><p id="bd-stock" class="bd-stock"></p>
       <h3 class="player-sel-title">CHOISIR LE JOUEUR :</h3>
-      <div id="player-grid">
+      <div id="player-grid" class="player-grid-3">
         <button class="player-btn" data-player="hippolyte"><span>Hippolyte</span><span id="cost-hippolyte" class="player-cost">— BC</span></button>
-        <button class="player-btn" data-player="nathanael"><span>Nathanael</span><span id="cost-nathanael" class="player-cost">— BC</span></button>
-        <button class="player-btn" data-player="edwin"><span>Edwin</span><span id="cost-edwin" class="player-cost">— BC</span></button>
         <button class="player-btn" data-player="teo"><span>Teo</span><span id="cost-teo" class="player-cost">— BC</span></button>
+        <button class="player-btn" data-player="nathanael"><span>Nathanael</span><span id="cost-nathanael" class="player-cost">— BC</span></button>
       </div>
       <div id="purchase-confirm" class="hidden"><p>Confirmer pour <strong id="purch-name">—</strong> ?</p><div class="purch-btns"><button id="purch-yes">Oui</button><button id="purch-no">Non</button></div></div>
       <p id="purch-feedback" class="hidden"></p>
@@ -221,26 +220,36 @@
   </div>
 </div>
 
-<!-- DT OVERLAY (Double Trouble phase feature) -->
-<div id="dt-ol" class="full-ol hidden">
-  <div class="dt-ol-top">
-    <p class="dt-ol-phase-lbl">PHASE 1 — DOUBLE TROUBLE</p>
-    <h2 class="dt-ol-title" id="dt-ol-title-el"></h2>
+<!-- DT OVERLAY (Double Trouble — evenement scenarise) -->
+<div id="dt-ol" class="full-ol dt-full-ol hidden">
+
+  <!-- INTRO CINEMATIQUE -->
+  <div id="dt-intro-section">
+    <div id="dt-intro-lines" class="dt-intro-lines"></div>
+    <button id="dt-intro-skip" class="roll-pre-close">Passer &#8594;</button>
   </div>
-  <div id="dt-ol-teams" class="dt-ol-teams"></div>
-  <p class="dt-ol-note" id="dt-ol-note"></p>
-  <div id="dt-countdown-wrap" class="dt-countdown-wrap hidden">
-    <div id="dt-count-num" class="dt-count-num">3</div>
+
+  <!-- TITRE -->
+  <div id="dt-title-section" class="hidden">
+    <h1 class="dt-big-title">DOUBLE TROUBLE</h1>
+    <p class="dt-big-sub">10 minutes. Reserve commune. Le BRADDY3000 compte sur vous.</p>
   </div>
-  <div id="dt-ol-actions">
-    <button id="dt-ol-start-btn" class="dt-ol-start-btn">&#9654; COMMENCER</button>
-    <button id="dt-ol-cancel-btn" class="dt-ol-cancel-btn">&#8592; Fermer</button>
+
+  <!-- MISSIONS GRID -->
+  <div id="dt-missions-section" class="hidden">
+    <div class="dt-top-bar">
+      <div class="dt-timer" id="dt-timer-live">10:00</div>
+      <div class="dt-pool">Réserve BRADDY3000 : <span id="dt-pool-val">0</span> BC</div>
+    </div>
+    <div id="dt-missions-grid" class="dt-missions-grid"></div>
+    <button id="dt-minimize-btn" class="roll-pre-close">Réduire (le chrono continue)</button>
   </div>
-  <div id="dt-go-section" class="dt-go-section hidden">
-    <div class="dt-go-txt">GO !</div>
-    <p class="dt-go-sub">Premiere equipe revenue = +5 BC bonus par participant</p>
-    <button id="dt-ol-done-btn" class="dt-complete-btn">&#10003; DOUBLE TROUBLE ACCOMPLI</button>
+
+  <!-- FIN -->
+  <div id="dt-end-section" class="hidden">
+    <div id="dt-end-lines" class="dt-intro-lines"></div>
   </div>
+
 </div>
 
 <!-- GAGE SECONDAIRE -->
