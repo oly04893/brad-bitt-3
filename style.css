@@ -316,29 +316,40 @@ body{background:linear-gradient(180deg,#230000 0%,#0b0000 18%,#000 40%,#0f0000 5
 .dt-launch-btn{width:100%;font-family:var(--orb);font-size:12px;font-weight:700;letter-spacing:.3em;padding:14px;background:rgba(204,0,0,.18);border:2px solid rgba(204,0,0,.7);color:var(--white);margin-top:12px;animation:actGl 2s ease-in-out infinite;}
 .dt-launch-btn:active{background:rgba(204,0,0,.35);}
 
-/* DT OVERLAY */
-#dt-ol{gap:14px;}
-.dt-ol-top{text-align:center;width:100%;max-width:380px;}
-.dt-ol-phase-lbl{font-family:var(--mono);font-size:9px;color:rgba(204,0,0,.7);letter-spacing:.4em;}
-.dt-ol-title{font-family:var(--pir);font-size:clamp(22px,6vw,30px);color:var(--white);margin-top:4px;}
-.dt-ol-teams{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:380px;}
-.dt-ol-team{border:1px solid rgba(204,0,0,.35);padding:12px;background:rgba(0,0,0,.3);}
-.dt-ol-team-label{font-family:var(--orb);font-size:10px;font-weight:700;color:var(--red2);letter-spacing:.12em;margin-bottom:6px;}
-.dt-ol-task{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.5);line-height:1.5;margin-bottom:8px;}
-.dt-ol-players{display:flex;flex-direction:column;gap:4px;}
-.dt-ol-player{font-family:var(--orb);font-size:13px;font-weight:700;color:var(--white);background:rgba(204,0,0,.2);padding:6px 10px;text-align:center;border:1px solid rgba(204,0,0,.3);}
-.dt-ol-note{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.2em;text-align:center;}
-#dt-ol-actions{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;}
-.dt-ol-start-btn{font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.35em;padding:16px;background:transparent;border:2px solid var(--red);color:var(--white);animation:actGl 2s ease-in-out infinite;}
-.dt-ol-start-btn:active{background:rgba(204,0,0,.2);}
-.dt-ol-cancel-btn{font-family:var(--mono);font-size:10px;letter-spacing:.3em;padding:10px;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.35);}
-.dt-countdown-wrap{display:flex;align-items:center;justify-content:center;width:100%;height:160px;}
-.dt-count-num{font-family:var(--orb);font-size:130px;font-weight:900;color:var(--red2);line-height:1;text-shadow:0 0 60px rgba(204,0,0,.9),0 0 120px rgba(204,0,0,.4);}
-.dt-count-anim{animation:dtFlip .55s cubic-bezier(.23,1.3,.7,1) both;}
-@keyframes dtFlip{from{transform:perspective(600px) rotateX(-90deg) scale(1.4);opacity:0}to{transform:perspective(600px) rotateX(0) scale(1);opacity:1}}
-.dt-go-section{text-align:center;width:100%;max-width:360px;}
-.dt-go-txt{font-family:var(--orb);font-size:80px;font-weight:900;color:#00ff41;text-shadow:0 0 40px rgba(0,255,65,.8);animation:dtFlip .5s cubic-bezier(.23,1.3,.7,1) both;line-height:1;}
-.dt-go-sub{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.25em;margin:10px 0 16px;line-height:1.8;}
+/* DT OVERLAY — nouvelle mecanique */
+#dt-ol.dt-full-ol{padding:0;background:#050505;}
+.dt-in-progress{border-color:rgba(0,255,65,.4);background:rgba(0,40,15,.25);}
+.dt-chrono{font-family:var(--orb);font-size:28px;font-weight:900;color:#00ff41;letter-spacing:.2em;text-align:center;margin:10px 0;text-shadow:0 0 20px rgba(0,255,65,.5);}
+.dt-pool-mini{font-family:var(--mono);font-size:10px;color:rgba(255,150,0,.8);letter-spacing:.15em;text-align:center;margin-bottom:10px;}
+.dt-pool-mini span{color:var(--orange);font-weight:700;}
+
+/* Intro cinematique */
+#dt-intro-section{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;gap:20px;background:radial-gradient(ellipse at center,#1a0505 0%,#000 70%);}
+.dt-intro-lines{display:flex;flex-direction:column;gap:10px;max-width:420px;width:100%;min-height:280px;justify-content:center;}
+.dt-intro-line{font-family:var(--mono);font-size:12px;color:rgba(255,80,80,.85);letter-spacing:.08em;line-height:1.7;text-align:center;transition:opacity .4s;}
+.dt-intro-big{font-family:var(--orb);font-size:26px;font-weight:900;color:var(--red2);letter-spacing:.35em;text-align:center;text-shadow:0 0 25px rgba(255,34,34,.7);transition:opacity .4s;margin:8px 0;}
+
+/* Titre */
+#dt-title-section{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:radial-gradient(ellipse at center,#1a0505 0%,#000 70%);}
+.dt-big-title{font-family:var(--orb);font-size:clamp(34px,10vw,56px);font-weight:900;letter-spacing:.2em;color:var(--white);text-shadow:0 0 40px rgba(204,0,0,.8),0 0 90px rgba(204,0,0,.4);animation:actGl 1.5s ease-in-out infinite;text-align:center;}
+.dt-big-sub{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.25em;text-align:center;padding:0 20px;}
+
+/* Missions grid */
+#dt-missions-section{width:100%;height:100%;display:flex;flex-direction:column;padding:16px;gap:10px;overflow-y:auto;}
+.dt-top-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid rgba(204,0,0,.4);background:rgba(20,0,0,.4);flex-shrink:0;}
+.dt-timer{font-family:var(--orb);font-size:26px;font-weight:900;color:var(--red2);letter-spacing:.15em;text-shadow:0 0 15px rgba(255,34,34,.6);}
+.dt-pool{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);letter-spacing:.1em;}
+.dt-pool span{color:var(--orange);font-family:var(--orb);font-weight:700;font-size:14px;}
+.dt-missions-grid{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.dt-tier-label{font-family:var(--orb);font-size:10px;font-weight:700;letter-spacing:.2em;padding:8px 4px 4px;}
+.dt-mission-card{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%;padding:12px;border:1px solid;background:rgba(0,0,0,.35);transition:background .15s,transform .1s;}
+.dt-mission-card:active{background:rgba(255,255,255,.06);transform:scale(.98);}
+.dt-mission-desc{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.75);line-height:1.5;flex:1;}
+.dt-mission-bc{font-family:var(--orb);font-size:12px;font-weight:900;flex-shrink:0;}
+.dt-empty-hint{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.4);text-align:center;padding:30px;letter-spacing:.15em;}
+
+/* Fin */
+#dt-end-section{width:100%;height:100%;display:flex;align-items:flex-end;padding:30px 24px;background:#000;}
 
 /* ACTIVE GAGE CARD */
 .section-lbl{font-family:var(--orb);font-size:10px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.4em;padding:12px 0 6px;border-bottom:1px solid rgba(255,255,255,.05);margin-bottom:8px;}
@@ -459,3 +470,4 @@ body{background:linear-gradient(180deg,#230000 0%,#0b0000 18%,#000 40%,#0f0000 5
 /* DT IN PROGRESS */
 .dt-in-progress{border-color:rgba(0,255,65,.4);background:rgba(0,40,15,.25);}
 .dt-chrono{font-family:var(--orb);font-size:28px;font-weight:900;color:#00ff41;letter-spacing:.2em;text-align:center;margin:10px 0;text-shadow:0 0 20px rgba(0,255,65,.5);}
+.player-grid-3{grid-template-columns:repeat(3,1fr)!important;}
