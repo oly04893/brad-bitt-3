@@ -6,28 +6,28 @@ const CFG = {
   targetDate: new Date('2026-08-05T11:00:00+02:00'),
   phaseCodes: {'BRADDY-ALPHA':1,'BRADDY-BRAVO':2,'BRADDY-CHARLIE':3,'BRADDY-DELTA':4,'BRADDY-OMEGA':5},
   costs: {
-    gageSecondaire:{hippolyte:15,nathanael:15,edwin:15,teo:15},
-    refaireRoue:{hippolyte:20,nathanael:20,edwin:20,teo:20},
-    laisserPasser:{hippolyte:25,nathanael:25,edwin:25,teo:25},
-    doubleTimbre:{hippolyte:25,nathanael:25,edwin:25,teo:25},
-    imposerGage:{hippolyte:30,nathanael:30,edwin:30,teo:30},
-    declencherEvenement:{hippolyte:50,nathanael:50,edwin:50,teo:50},
+    gageSecondaire:{hippolyte:15,nathanael:15,teo:15},
+    refaireRoue:{hippolyte:20,nathanael:20,teo:20},
+    laisserPasser:{hippolyte:25,nathanael:25,teo:25},
+    doubleTimbre:{hippolyte:25,nathanael:25,teo:25},
+    imposerGage:{hippolyte:30,nathanael:30,teo:30},
+    declencherEvenement:{hippolyte:50,nathanael:50,teo:50},
   },
   initStock:{
-    gageSecondaire:{hippolyte:1,nathanael:1,edwin:1,teo:1},
-    refaireRoue:{hippolyte:2,nathanael:2,edwin:2,teo:2},
-    laisserPasser:{hippolyte:1,nathanael:1,edwin:1,teo:1},
-    doubleTimbre:{hippolyte:1,nathanael:1,edwin:1,teo:1},
-    imposerGage:{hippolyte:1,nathanael:1,edwin:1,teo:1},
-    declencherEvenement:{hippolyte:1,nathanael:1,edwin:1,teo:1},
+    gageSecondaire:{hippolyte:1,nathanael:1,teo:1},
+    refaireRoue:{hippolyte:2,nathanael:2,teo:2},
+    laisserPasser:{hippolyte:1,nathanael:1,teo:1},
+    doubleTimbre:{hippolyte:1,nathanael:1,teo:1},
+    imposerGage:{hippolyte:1,nathanael:1,teo:1},
+    declencherEvenement:{hippolyte:1,nathanael:1,teo:1},
   },
   phaseCoins:[0,5,5,5,5,10],
 };
 
-const R_PLAYERS  = ['Hippolyte','Teo','Edwin','Nathanael'];
-const R_KEYS     = ['hippolyte','teo','edwin','nathanael'];
-const R_COLORS   = ['#5a0000','#380000','#7a0000','#440000'];
-const DISPLAY_NAMES = ['Hippolyte','Teo','Edwin','Nathanael'];
+const R_PLAYERS  = ['Hippolyte','Teo','Nathanael'];
+const R_KEYS     = ['hippolyte','teo','nathanael'];
+const R_COLORS   = ['#5a0000','#380000','#7a0000'];
+const DISPLAY_NAMES = ['Hippolyte','Teo','Nathanael'];
 const EV_COLORS  = ['#1a0040','#002a1a','#1a1500','#001a2a','#2a0020','#0a1500'];
 
 const SECONDARY_GAGES = [
@@ -37,18 +37,25 @@ const SECONDARY_GAGES = [
   {id:'sg4',name:"Transmission Prioritaire",desc:"Demander a un inconnu de choisir un nombre entre 1 et 10. Annoncer tres serieusement au groupe : Le BRADDY3000 enregistre la valeur... transmission validee.",bc:5},
 ];
 
+const DT_TIERS = [
+  {n:1,name:"Cornichon peu amer",bc:5,color:"#2d6a2d"},
+  {n:2,name:"Serrano Épicé",bc:10,color:"#a83e17"},
+  {n:3,name:"Fromage Carbonisé",bc:15,color:"#7a3300"},
+  {n:4,name:"Vachement Salé",bc:25,color:"#7a0000"},
+];
+
 const SIDE_MISSIONS = [
-  {id:"sm1",desc:"Faire un compliment sincere a un inconnu."},
-  {id:"sm2",desc:"Trouver un objet rouge et le montrer au groupe."},
-  {id:"sm3",desc:"Demander l'heure alors que tu as ton telephone dans la main."},
-  {id:"sm4",desc:"Photo de groupe avec l'air extremement serieux."},
-  {id:"sm5",desc:"Trouver un objet portant le chiffre 67."},
-  {id:"sm6",desc:"Faire dire Serrano a un membre du groupe naturellement."},
-  {id:"sm7",desc:"Faire une poignee de main ridicule avec Brad Corporation comme excuse."},
-  {id:"sm8",desc:"Trouver le prenom Brad ecrit quelque part."},
-  {id:"sm9",desc:"Demander a quelqu'un quel est son fromage prefere."},
-  {id:"sm10",desc:"Selfie ou personne ne regarde l'appareil."},
-]
+  {id:"sm1",tier:1,desc:"Trouver dans un magasin ou dans la rue un objet qui fait immediatement penser au YouTuber Asterion (couleur, symbole, personnage...) et le montrer au groupe."},
+  {id:"sm2",tier:1,desc:"Apprendre a dire 'jambon' en langage des signes. L'objectif est uniquement d'apprendre le geste."},
+  {id:"sm3",tier:1,desc:"Prendre en photo un appareil a raclette apercu dans un magasin. Cette photo doit devenir le fond d'ecran du telephone jusqu'a la fin de la journee."},
+  {id:"sm4",tier:2,desc:"Demander a un passant : Selon vous, quel sera le resultat du quart de finale France - Italie de la Coupe du Monde 2030, avec Zinedine Zidane comme selectionneur ? Transmettre le resultat au BRADDY3000 via le chat."},
+  {id:"sm5",tier:2,desc:"Trouver un objet particulierement etrange, insolite ou inattendu dans un magasin ou dans la rue. Le groupe valide ensemble si l'objet merite cette qualification."},
+  {id:"sm6",tier:3,desc:"Publier une story privee (visible uniquement par un cercle restreint d'amis si souhaite) vantant les merites de la raclette."},
+  {id:"sm7",tier:3,desc:"Convaincre un inconnu de faire un dab devant l'objectif ou devant le groupe. Le tout doit rester naturel, respectueux et humoristique."},
+  {id:"sm8",tier:4,desc:"Obtenir l'accord d'un inconnu afin de prendre une photo souvenir avec lui. L'objectif est simplement de repartir avec une photo amusante dans un esprit convivial."},
+];
+function smBC(id){const sm=SIDE_MISSIONS.find(s=>s.id===id);const t=DT_TIERS.find(t=>t.n===sm?.tier);return t?t.bc:5;}
+function smTier(id){const sm=SIDE_MISSIONS.find(s=>s.id===id);return DT_TIERS.find(t=>t.n===sm?.tier);}
 
 const EVENTS = [
   {id:'ev1',name:'SYNCHRONISATION FORCEE',desc:'Les 4 agents se prennent en photo dans une posture imposee decidee par Brad Bitt. 30 secondes pour trouver la pose.'},
@@ -67,16 +74,14 @@ const PHASES = [
       {id:'p1g1',name:'Expert Raclette',desc:"Entrer dans un magasin d'electromenager et demander des informations tres precises sur un appareil a raclette : nombre de fromages par minute, rendement de fonte, compatibilite avec le Serrano.",bc:5},
       {id:'p1g2',name:'Carte Miaouscarade',desc:"Trouver une carte Miaouscarade dans une boutique specialisee et l'acheter.",bc:5},
       {id:'p1g3',name:'Objet Mystere',desc:"Acheter un objet coutant moins de 2 euros et le garder secret jusqu'a la fin de la journee.",bc:5},
-      {id:'p1g4',name:'Demande de la plus haute importance',desc:'Envoyer une proposition a Brets afin de suggerer une saveur Raclette Serrano.',bc:5},
     ],
     contracts:[{name:'Synchronisation BRADDY3000',desc:'Deux participants se tiennent la main pendant 20 minutes.',reward:'Multiplicateur x1.5'}],
-    dt:{a:'Equipe Fromage — Trouver du fromage a raclette.',b:'Equipe Charcuterie — Trouver du Serrano.',bonus:'+5 BC bonus par participant pour la premiere equipe revenue.'}
+    dt:null
   },
   {
     name:'PHASE 2 — DEJEUNER',desc:'Collecte intensive',
     gages:[
       {id:'p2g1',name:'Commande Controlee',desc:"Le participant choisit uniquement la taille de son repas. Le reste est decide par un autre joueur.",bc:5},
-      {id:'p2g2',name:"Collaboration O'Tacos",desc:"Demander au personnel si une collaboration O'Tacos x Serrano est prevue.",bc:5},
       {id:'p2g3',name:'Serrano Secret',desc:'Integrer le Serrano achete precedemment dans son repas.',bc:5},
       {id:'p2g4',name:'Influenceur Culinaire',desc:'Presenter son repas comme une revolution technologique.',bc:5},
     ],
@@ -97,10 +102,12 @@ const PHASES = [
   {
     name:'PHASE 5 — FINALE',desc:'Attribution directe par Brad',directAssignment:true,
     gages:[
-      {id:'p5g1',name:'Mario Kart',desc:"Demander a quelqu'un a la FNAC de faire une partie sur une borne de demonstration.",bc:10},
-      {id:'p5g2',name:'Micro-Trottoir Raclette',desc:'"Pensez-vous que la raclette est reservee aux fetes ou peut etre consommee toute l\'annee ?"',bc:10},
-      {id:'p5g3',name:"Livre d'Or",desc:"Acheter un carnet et obtenir la dedicace d'un inconnu.",bc:10},
-      {id:'p5g4',name:'La Story Salee',desc:'Defendre les merites de la raclette dans une story a un cercle restreint.',bc:10},
+      {id:'p5g1',name:'Mario Kart',desc:"Se rendre a la borne de demonstration de la FNAC et demander a une personne presente si elle accepterait de faire une partie de Mario Kart contre vous.",bc:10,
+       bradOnStart:"Les capacites de conduite des habitants de Lille doivent etre analysees. Toute donnee de pilotage peut s'averer utile pour anticiper les deplacements de Kirby 67."},
+      {id:'p5g2',name:'Micro-Trottoir Raclette',desc:"Demander a un passant : 'Pensez-vous que la raclette est un plat reserve aux fetes de fin d'annee ou peut-on en manger toute l'annee ?' La reponse est transmise au BRADDY3000.",bc:10,
+       bradOnStart:"Analyse sociologique en cours. Les habitudes alimentaires de la population lilloise pourraient etre directement liees au fameux Monde au Serrano de Kirby 67."},
+      {id:'p5g3',name:"Livre d'Or",desc:"Acheter un petit carnet (ou utiliser un carnet prevu) puis demander a un inconnu d'y laisser une dedicace, un mot ou une signature.",bc:10,
+       bradOnStart:"Toute trace d'ecriture humaine constitue une donnee precieuse pour enrichir les archives de Brad Corporation."},
     ],
     contracts:[],dt:null
   },
@@ -110,11 +117,11 @@ const BOLT_SVG='<svg width="13" height="18" viewBox="0 0 13 18" xmlns="http://ww
 
 /* STATE */
 function loadState(){try{const s=localStorage.getItem('n2s3');if(s)return JSON.parse(s);}catch(e){}
-  return{phase:0,coins:{hippolyte:0,nathanael:0,edwin:0,teo:0},stock:JSON.parse(JSON.stringify(CFG.initStock)),
+  return{phase:0,coins:{hippolyte:0,nathanael:0,teo:0},stock:JSON.parse(JSON.stringify(CFG.initStock)),
     chatHistory:[],introComplete:false,chatBadge:0,lastView:'home',
     doneGages:[],phaseExcluded:[],waitingForOui:false,phase1Announced:false,
-    waitingForDelete:false,doneDT:false,phase1Complete:false,
-    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,dtTeamA:[],dtTeamB:[],dtGoTime:0,contractTimer:null,
+    waitingForDelete:false,doneDT:false,phase1Complete:false,pendingCC:null,
+    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,contractTimers:{},dtActive:false,dtStart:0,dtPoolBC:0,
   };}
 let S=loadState();
 function save(){try{localStorage.setItem('n2s3',JSON.stringify(S));}catch(e){}}
@@ -163,6 +170,7 @@ function completeActiveGage(agIdx,status){
   const ag=S.activeGages[agIdx];if(!ag)return;
   let bc=status==='reussi'?ag.bc:0;
   if(status==='reussi'){
+    if(S.nextGageMultiplier&&S.nextGageMultiplier>1){const oldBc=bc;bc=Math.round(bc*S.nextGageMultiplier);S.nextGageMultiplier=0;setTimeout(()=>bradMsg(`Multiplicateur du contrat Synchronisation applique ! ${oldBc} BC deviennent ${bc} BC pour ${DISPLAY_NAMES[ag.playerIdx]}.`),300);}
     if(S.brouillageEnd&&Date.now()<S.brouillageEnd){bc*=2;setTimeout(()=>bradMsg(`BROUILLAGE ACTIF — BC doubles ! ${DISPLAY_NAMES[ag.playerIdx]} gagne ${bc} BC.`),200);}
     if((S.primeNext||0)>0){bc+=S.primeNext;S.primeNext=0;setTimeout(()=>bradMsg(`PRIME EXCEPTIONNELLE appliquee. BC bonus inclus.`),400);}
     S.coins[R_KEYS[ag.playerIdx]]=(S.coins[R_KEYS[ag.playerIdx]]||0)+bc;
@@ -383,50 +391,53 @@ function renderGages(){
     if(!ph.directAssignment&&poolGages.length)html+=`<div class="section-lbl">DISPONIBLES</div>`;
     if(ph.directAssignment&&poolGages.length)html+=`<div class="section-lbl">DISPONIBLES — ATTRIBUTION BRAD</div>`;
     poolGages.forEach(g=>{
-      html+=`<div class="gage-card" data-gid="${g.id}"><div class="gage-card-header"><div class="gage-card-name">${g.team?'<span class="gage-team-tag">[EQUIPE] </span>':''}${g.name}</div><div class="gage-card-bc">+${g.bc} BC</div></div><div class="gage-card-desc">${g.desc}</div><div class="gage-card-footer"><span class="gage-card-tap">${ph.directAssignment?'&#9658; ATTRIBUTION DIRECTE':'&#9658; APPUYER POUR TIRER AU SORT'}</span></div></div>`;
+      const isPendingCC=g.id==='p2g1'&&S.pendingCC&&S.pendingCC.gageId==='p2g1';
+      const footer=isPendingCC?`<span class="gage-card-tap gage-pending">&#9888; CLIENT : ${DISPLAY_NAMES[S.pendingCC.clientIdx]} — OPÉRATEUR : ${DISPLAY_NAMES[S.pendingCC.opIdx]} — appuyer pour continuer</span>`:`<span class="gage-card-tap">${ph.directAssignment?'&#9658; ATTRIBUTION DIRECTE':'&#9658; APPUYER POUR TIRER AU SORT'}</span>`;
+      html+=`<div class="gage-card${isPendingCC?' pending':''}" data-gid="${g.id}"><div class="gage-card-header"><div class="gage-card-name">${g.team?'<span class="gage-team-tag">[EQUIPE] </span>':''}${g.name}</div><div class="gage-card-bc">+${g.bc} BC</div></div><div class="gage-card-desc">${g.desc}</div><div class="gage-card-footer">${footer}</div></div>`;
     });
     if(!poolGages.length&&!S.activeGages.length)html+=`<div class="pool-empty">Tous les gages de cette phase ont ete attribues.</div>`;
   }
 
-  // DOUBLE TROUBLE
-  if(ph.dt){
-    const pDone=!ph.gages?.length||ph.gages.every(g=>S.doneGages?.includes(g.id));
-    const doneN=(ph.gages||[]).filter(g=>S.doneGages?.includes(g.id)).length,totN=(ph.gages||[]).length;
-    if(!pDone){html+=`<div class="dt-block dt-locked"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-locked-body"><p class="dt-locked-q">???</p><p class="dt-locked-hint">Se déverrouille après ${totN} gages accomplis — ${doneN}/${totN}</p></div></div>`;}
-    else if(!S.doneDT&&S.dtGoTime>0){
-      // DT in progress - show live timer
-      const dtEl=Math.floor((Date.now()-S.dtGoTime)/1000);const dtMM=String(Math.floor(dtEl/60)).padStart(2,'0'),dtSS=String(dtEl%60).padStart(2,'0');
-      const tAN=(S.dtTeamA||[]).map(i=>DISPLAY_NAMES[i]).join(' & ')||'Équipe A';
-      const tBN=(S.dtTeamB||[]).map(i=>DISPLAY_NAMES[i]).join(' & ')||'Équipe B';
-      html+=`<div class="dt-block dt-in-progress"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE EN COURS ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">FROMAGE</div><div class="dt-team-desc">${tAN}</div></div><div class="dt-team"><div class="dt-team-name">CHARCUTERIE</div><div class="dt-team-desc">${tBN}</div></div></div><div class="dt-chrono" id="dt-live-chrono">CHRONO : ${dtMM}:${dtSS}</div><button class="dt-complete-btn" id="dt-done-btn">&#10003; MARQUER COMME ACCOMPLI</button></div>`;
+  // DOUBLE TROUBLE (nouvelle mecanique — evenement scenarise, plus un gage)
+  if(S.phase===1){
+    const p1AllDone=PHASES[1].gages.every(g=>S.doneGages?.includes(g.id));
+    const doneN=PHASES[1].gages.filter(g=>S.doneGages?.includes(g.id)).length,totN=PHASES[1].gages.length;
+    if(S.doneDT){
+      html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-done-lbl">&#10003; PROTOCOLE TERMINÉ — ${S.dtPoolBC||0} BC récoltés, répartis entre les 3 agents.</div></div>`;
+    } else if(!p1AllDone){
+      html+=`<div class="dt-block dt-locked"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-locked-body"><p class="dt-locked-q">???</p><p class="dt-locked-hint">Se déverrouille après ${totN} gages accomplis — ${doneN}/${totN}</p></div></div>`;
+    } else if(S.dtActive){
+      const rem=Math.max(0,Math.floor(((S.dtStart+10*60*1000)-Date.now())/1000));
+      const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
+      html+=`<div class="dt-block dt-in-progress"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE EN COURS ${BOLT_SVG}</div><div class="dt-chrono" id="dt-resume-chrono">${mm}:${ss}</div><div class="dt-pool-mini">Réserve BRADDY3000 : <span id="dt-resume-pool">${S.dtPoolBC||0}</span> BC</div><button class="dt-launch-btn" id="dt-resume-btn">&#9654; REPRENDRE LE DOUBLE TROUBLE</button></div>`;
+    } else {
+      html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-locked-body"><p style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);text-align:center;line-height:1.8">Tous les gages sont accomplis. Le BRADDY3000 détecte une anomalie...</p></div><button class="dt-launch-btn" id="dt-launch-btn">&#9888; DÉCLENCHER LE PROTOCOLE</button></div>`;
     }
-    else if(!S.doneDT){html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">ÉQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">ÉQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><button class="dt-launch-btn" id="dt-launch-btn">&#9654; LANCER LE DOUBLE TROUBLE</button><button class="dt-complete-btn" id="dt-done-btn">&#10003; MARQUER COMME ACCOMPLI</button></div>`;}
-    else{html+=`<div class="dt-block"><div class="dt-title">${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}</div><div class="dt-teams"><div class="dt-team"><div class="dt-team-name">ÉQUIPE A</div><div class="dt-team-desc">${ph.dt.a}</div></div><div class="dt-team"><div class="dt-team-name">ÉQUIPE B</div><div class="dt-team-desc">${ph.dt.b}</div></div></div><div class="dt-bonus">${ph.dt.bonus}</div><div class="dt-done-lbl">&#10003; DOUBLE TROUBLE ACCOMPLI</div></div>`;}
   }
 
   // CONTRACTS
-  const contractsLocked=!!(ph.dt&&!S.doneDT);
+  const contractsLocked=(S.phase===1&&!S.doneDT);
   if(ph.contracts&&ph.contracts.length){
     html+=`<div class="contracts-section"><div class="contracts-title">CONTRATS BRADDY3000</div>`;
     if(contractsLocked){html+=`<div class="contract-locked"><p class="contract-locked-q">???</p><p class="contract-locked-hint">Se déverrouille après le Double Trouble</p></div>`;}
     else{
+      if(!S.contractTimers)S.contractTimers={};
       ph.contracts.forEach((c,ci)=>{
-        const isSynchro=c.name.includes('Synchronisation')||c.name.includes('Satellite')||c.name.includes('Prioritaire')||c.name.includes('Serrano');
-        if(isSynchro){
-          const ct=S.contractTimer;
-          const now=Date.now();
-          if(ct&&ct.active&&now<ct.end){
-            const rem=Math.max(0,Math.ceil((ct.end-now)/1000));
-            const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
-            const p1=DISPLAY_NAMES[ct.p1],p2=DISPLAY_NAMES[ct.p2];
-            html+=`<div class="contract-card contract-active-timer" id="contract-synchro"><div class="contract-name">&#9201; ${c.name}</div><div class="contract-players">${p1} &amp; ${p2} — en cours</div><div class="contract-timer-display" id="contract-countdown">${mm}:${ss}</div><div class="contract-desc">${c.desc}</div><button class="contract-claim-btn" id="contract-claim" style="display:none">CONTRAT TERMINE — RECLAMER x1.5</button></div>`;
-          } else if(ct&&ct.active&&now>=ct.end){
-            html+=`<div class="contract-card contract-done"><div class="contract-name">&#10003; ${c.name}</div><div class="contract-desc">Contrat accompli par ${DISPLAY_NAMES[ct.p1]} et ${DISPLAY_NAMES[ct.p2]}.</div><button class="contract-claim-btn" id="contract-claim">RECLAMER LE MULTIPLICATEUR x1.5</button></div>`;
-          } else {
-            html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward}</div><button class="contract-launch-btn" id="contract-launch-${ci}">LANCER LE CONTRAT</button></div>`;
-          }
+        const isSynchroHands=c.name.includes('Synchronisation');
+        const duration=isSynchroHands?20*60*1000:5*60*1000;
+        const durLbl=isSynchroHands?'20 min':'5 min';
+        const key=S.phase+'_'+ci;
+        const ct=S.contractTimers[key];
+        const now=Date.now();
+        if(ct&&ct.active&&now<ct.end){
+          const rem=Math.max(0,Math.ceil((ct.end-now)/1000));
+          const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
+          const p1=DISPLAY_NAMES[ct.p1],p2=DISPLAY_NAMES[ct.p2];
+          html+=`<div class="contract-card contract-active-timer" data-ckey="${key}"><div class="contract-name">&#9201; ${c.name}</div><div class="contract-players">${p1} &amp; ${p2} — en cours</div><div class="contract-timer-display" data-ctimer="${key}">${mm}:${ss}</div><div class="contract-desc">${c.desc}</div></div>`;
+        } else if(ct&&ct.active&&now>=ct.end){
+          html+=`<div class="contract-card contract-done"><div class="contract-name">&#10003; ${c.name}</div><div class="contract-desc">Contrat accompli par ${DISPLAY_NAMES[ct.p1]} et ${DISPLAY_NAMES[ct.p2]}.</div><button class="contract-claim-btn" data-cclaim="${key}">${isSynchroHands?'RÉCLAMER LE MULTIPLICATEUR x1.5':'RÉCLAMER +5 BC CHACUN'}</button></div>`;
         } else {
-          html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward}</div></div>`;
+          html+=`<div class="contract-card"><div class="contract-name">${c.name}</div><div class="contract-desc">${c.desc}</div><div class="contract-reward">${c.reward} — durée : ${durLbl}</div><button class="contract-launch-btn" data-claunch="${key}" data-ci="${ci}">LANCER LE CONTRAT</button></div>`;
         }
       });
     }
@@ -487,12 +498,20 @@ function renderGages(){
   document.querySelectorAll('.gage-card').forEach(card=>{
     card.addEventListener('click',()=>{
       const gid=card.dataset.gid,g=getGageById(gid);if(!g)return;
+      if(gid==='p2g1'){
+        if(S.pendingCC&&S.pendingCC.gageId==='p2g1'){
+          openCommandeControlee(S.pendingCC.clientIdx,g,S.pendingCC.opIdx);
+          return;
+        }
+        openRoulette(g);
+        return;
+      }
       if(ph.directAssignment){
         S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gid);
         const excl=S.phaseExcluded||[];const usedKeys=(S.activeGages||[]).filter(ag=>ag.phase===S.phase).map(ag=>R_KEYS[ag.playerIdx]);
         const combined=[...new Set([...excl,...usedKeys])];
         const avail=R_KEYS.filter(k=>!combined.includes(k));
-        const pk=avail.length?avail[Math.floor(Math.random()*avail.length)]:R_KEYS[Math.floor(Math.random()*4)];
+        const pk=avail.length?avail[Math.floor(Math.random()*avail.length)]:R_KEYS[Math.floor(Math.random()*R_KEYS.length)];
         const pidx=R_KEYS.indexOf(pk);
         addActiveGage(gid,pidx);save();renderGages();flash(100,true);
         bradMsg(`Mission "${g.name}" attribuee a ${DISPLAY_NAMES[pidx]}. Le BRADDY3000 a decide.`);
@@ -501,37 +520,74 @@ function renderGages(){
     });
   });
 
-  // DT live chrono
-  const dtChronoEl=document.getElementById('dt-live-chrono');
-  if(dtChronoEl&&S.dtGoTime>0&&!S.doneDT){
-    const dtTick2=setInterval(()=>{const el=document.getElementById('dt-live-chrono');if(!el){clearInterval(dtTick2);return;}const e=Math.floor((Date.now()-S.dtGoTime)/1000);const m=String(Math.floor(e/60)).padStart(2,'0'),s=String(e%60).padStart(2,'0');el.textContent='CHRONO : '+m+':'+s;},1000);
+  // DT resume live chrono (when overlay is closed but DT still running)
+  const dtResumeChronoEl=document.getElementById('dt-resume-chrono');
+  if(dtResumeChronoEl&&S.dtActive&&!S.doneDT){
+    const dtTick2=setInterval(()=>{
+      const el=document.getElementById('dt-resume-chrono');if(!el){clearInterval(dtTick2);return;}
+      const rem=Math.max(0,Math.floor(((S.dtStart+10*60*1000)-Date.now())/1000));
+      const m=String(Math.floor(rem/60)).padStart(2,'0'),s=String(rem%60).padStart(2,'0');
+      el.textContent=m+':'+s;
+      if(rem===0){clearInterval(dtTick2);endDoubleTrouble();}
+    },1000);
   }
-  const dtBtn=document.getElementById('dt-done-btn');
-  if(dtBtn){dtBtn.addEventListener('click',()=>{S.doneDT=true;save();beep(440,.5,.1,'sine');bradMsg("Double Trouble accompli. Le BRADDY3000 prend note. Bien joue.");checkPhase1Complete();renderGages();});}
-  const launchBtn=document.getElementById('dt-launch-btn');
-  if(launchBtn){launchBtn.addEventListener('click',openDTInterface);}
+  const dtLaunchBtn=document.getElementById('dt-launch-btn');
+  if(dtLaunchBtn){dtLaunchBtn.addEventListener('click',openDTIntro);}
+  const dtResumeBtn=document.getElementById('dt-resume-btn');
+  if(dtResumeBtn){dtResumeBtn.addEventListener('click',()=>openDTMissionsOverlay());}
   document.querySelectorAll('.sm-ok').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'reussi')));
   document.querySelectorAll('.sm-fail').forEach(btn=>btn.addEventListener('click',()=>completeSideMission(parseInt(btn.dataset.smidx),'echoue')));
-  // Contract: launch button
-  document.querySelectorAll('[id^="contract-launch-"]').forEach(btn=>{btn.addEventListener('click',()=>openContractSynchroSelect());});
-  // Contract: live countdown
-  const cdEl=document.getElementById('contract-countdown');
-  if(cdEl&&S.contractTimer?.active){
-    const tick=()=>{const rem=Math.max(0,Math.ceil((S.contractTimer.end-Date.now())/1000));const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');const el=document.getElementById('contract-countdown');if(el)el.textContent=mm+':'+ss;else{clearInterval(ctI);return;}if(rem===0){clearInterval(ctI);renderGages();}};
-    const ctI=setInterval(tick,1000);
-  }
-  // Contract: claim button
-  const claimBtn=document.getElementById('contract-claim');
-  if(claimBtn){claimBtn.addEventListener('click',()=>{S.contractTimer={active:false};save();renderGages();bradMsg('Contrat Synchronisation BRADDY3000 accompli. Le multiplicateur x1.5 est actif pour le prochain gage. Bonne performance.');});}
+  // Contract: launch buttons (per phase+index key)
+  document.querySelectorAll('[data-claunch]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const key=btn.dataset.claunch,ci=parseInt(btn.dataset.ci);
+      const c=ph.contracts[ci];
+      openContractSelect(key,c);
+    });
+  });
+  // Contract: live countdowns (one interval per active contract card)
+  document.querySelectorAll('[data-ctimer]').forEach(el=>{
+    const key=el.dataset.ctimer;
+    const ctI=setInterval(()=>{
+      const ct=S.contractTimers?.[key];
+      const liveEl=document.querySelector(`[data-ctimer="${key}"]`);
+      if(!liveEl||!ct||!ct.active){clearInterval(ctI);return;}
+      const rem=Math.max(0,Math.ceil((ct.end-Date.now())/1000));
+      const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
+      liveEl.textContent=mm+':'+ss;
+      if(rem===0){clearInterval(ctI);renderGages();}
+    },1000);
+  });
+  // Contract: claim buttons
+  document.querySelectorAll('[data-cclaim]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const key=btn.dataset.cclaim;
+      const ct=S.contractTimers?.[key];if(!ct)return;
+      const isSynchroHands=ph.contracts.some((c,ci)=>(S.phase+'_'+ci)===key&&c.name.includes('Synchronisation'));
+      if(isSynchroHands){
+        S.nextGageMultiplier=1.5;save();
+        bradMsg(`Contrat Synchronisation BRADDY3000 accompli par ${DISPLAY_NAMES[ct.p1]} et ${DISPLAY_NAMES[ct.p2]}. Le multiplicateur x1.5 est actif pour le prochain gage réussi. Bonne performance.`);
+      } else {
+        S.coins[R_KEYS[ct.p1]]=(S.coins[R_KEYS[ct.p1]]||0)+5;
+        S.coins[R_KEYS[ct.p2]]=(S.coins[R_KEYS[ct.p2]]||0)+5;
+        save();
+        bradMsg(`Contrat accompli par ${DISPLAY_NAMES[ct.p1]} et ${DISPLAY_NAMES[ct.p2]}. +5 BC attribués à chacun.`);
+      }
+      S.contractTimers[key]={active:false};save();renderGages();renderBraddy();
+    });
+  });
 }
 
-function openContractSynchroSelect(){
+function openContractSelect(key,contract){
+  const isSynchroHands=contract.name.includes('Synchronisation');
+  const duration=isSynchroHands?20*60*1000:5*60*1000;
+  const durLbl=isSynchroHands?'20 minutes':'5 minutes';
   const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;overflow-y:auto;';
-  ov.innerHTML=`<p style="font-family:var(--orb);font-size:12px;color:var(--red2);letter-spacing:.3em;text-align:center">SYNCHRONISATION BRADDY3000<br><span style="font-size:9px;opacity:.6">Selectionner les 2 participants</span></p>
+  ov.innerHTML=`<p style="font-family:var(--orb);font-size:12px;color:var(--red2);letter-spacing:.3em;text-align:center">${contract.name.toUpperCase()}<br><span style="font-size:9px;opacity:.6">Sélectionner les 2 participants</span></p>
     <div id="cst-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:300px">
       ${DISPLAY_NAMES.map((n,i)=>`<button class="cst-player" data-pidx="${i}" style="font-family:var(--orb);font-size:13px;padding:14px;border:1px solid rgba(204,0,0,.4);color:var(--white);background:rgba(0,0,0,.3)">${n}</button>`).join('')}
     </div>
-    <p id="cst-hint" style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.2em">Selectionnez 2 joueurs</p>
+    <p id="cst-hint" style="font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:.2em">Sélectionnez 2 joueurs</p>
     <button id="cst-go" disabled style="font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.4em;padding:16px 50px;background:transparent;border:2px solid var(--red);color:var(--white);opacity:.4">GO !</button>
     <button id="cst-cancel" style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);padding:8px;border:1px solid rgba(255,255,255,.1)">Annuler</button>`;
   document.body.appendChild(ov);
@@ -541,14 +597,16 @@ function openContractSynchroSelect(){
     if(sel.includes(idx)){sel=sel.filter(i=>i!==idx);btn.style.background='rgba(0,0,0,.3)';btn.style.borderColor='rgba(204,0,0,.4)';}
     else if(sel.length<2){sel.push(idx);btn.style.background='rgba(204,0,0,.25)';btn.style.borderColor='var(--red)';}
     const go=ov.querySelector('#cst-go');if(sel.length===2){go.disabled=false;go.style.opacity='1';ov.querySelector('#cst-hint').textContent=`${DISPLAY_NAMES[sel[0]]} & ${DISPLAY_NAMES[sel[1]]}`;}
-    else{go.disabled=true;go.style.opacity='.4';ov.querySelector('#cst-hint').textContent='Selectionnez 2 joueurs';}
+    else{go.disabled=true;go.style.opacity='.4';ov.querySelector('#cst-hint').textContent='Sélectionnez 2 joueurs';}
   });});
   ov.querySelector('#cst-go').addEventListener('click',()=>{
     if(sel.length!==2)return;
-    const end=Date.now()+20*60*1000;
-    S.contractTimer={active:true,p1:sel[0],p2:sel[1],end,start:Date.now()};save();
+    const end=Date.now()+duration;
+    if(!S.contractTimers)S.contractTimers={};
+    S.contractTimers[key]={active:true,p1:sel[0],p2:sel[1],end,start:Date.now()};save();
     ov.remove();renderGages();
-    bradMsg(`Contrat Synchronisation BRADDY3000 lance ! ${DISPLAY_NAMES[sel[0]]} et ${DISPLAY_NAMES[sel[1]]} doivent rester main dans la main pendant 20 minutes. Le BRADDY3000 surveille. Courage.`);
+    const actionTxt=isSynchroHands?'rester main dans la main':contract.name.includes('Satellite')?'rester a moins de 2 metres l\'un de l\'autre':contract.name.includes('Prioritaire')?'terminer les phrases l\'un de l\'autre':'integrer le mot Serrano dans plusieurs conversations';
+    bradMsg(`Contrat ${contract.name} lancé ! ${DISPLAY_NAMES[sel[0]]} et ${DISPLAY_NAMES[sel[1]]} doivent ${actionTxt} pendant ${durLbl}. Le BRADDY3000 surveille.`);
   });
   ov.querySelector('#cst-cancel').addEventListener('click',()=>ov.remove());
 }
@@ -682,6 +740,7 @@ function startMissionFromRoulette(){
   document.getElementById('roulette-ol').classList.add('hidden');
   // Special: Commande Controlee needs 2 wheels
   if(rCurrentGage.id==='p2g1'){
+    S.pendingMission=null;save();
     openCommandeControlee(rWinnerIdx,rCurrentGage);
     return;
   }
@@ -691,9 +750,8 @@ function startMissionFromRoulette(){
   setTimeout(()=>bradMsg(`Mission "${rCurrentGage.name}" attribuee a ${DISPLAY_NAMES[rWinnerIdx]}. Elle apparait dans la section "En cours".`),400);
 }
 
-function openCommandeControlee(clientIdx,gage){
-  // Player wheel 2: operator (excluding client)
-  const opPlayers=R_PLAYERS.map((p,i)=>({name:p,key:R_KEYS[i],color:R_COLORS[i],idx:i})).filter(pl=>pl.idx!==clientIdx);
+function openCommandeControlee(clientIdx,gage,resumeOpIdx){
+  const opPlayersFull=R_PLAYERS.map((p,i)=>({name:p,key:R_KEYS[i],color:R_COLORS[i],idx:i})).filter(pl=>pl.idx!==clientIdx);
   const ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;overflow-y:auto;';
   ov.innerHTML=`<p style="font-family:var(--orb);font-size:11px;color:var(--red2);letter-spacing:.3em;text-align:center">COMMANDE CONTROLEE<br><span style="font-size:9px;opacity:.6">Attribution des roles</span></p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:340px">
@@ -712,30 +770,47 @@ function openCommandeControlee(clientIdx,gage){
     </div>
     <div id="cc-result" class="hidden" style="display:none;text-align:center">
       <p style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);letter-spacing:.2em">Attribution confirmee</p>
-      <button id="cc-start" style="font-family:var(--orb);font-size:12px;font-weight:700;letter-spacing:.3em;padding:14px 40px;background:rgba(204,0,0,.2);border:2px solid var(--red);color:var(--white);margin-top:12px">&#8627; DEMARRER</button>
+      <button id="cc-start" style="font-family:var(--orb);font-size:12px;font-weight:700;letter-spacing:.3em;padding:14px 40px;background:rgba(204,0,0,.2);border:2px solid var(--red);color:var(--white);margin-top:12px">&#8627; COMMENCER LA MISSION</button>
     </div>`;
   document.body.appendChild(ov);
+
+  function showResult(op){
+    document.getElementById('cc-op-name').textContent=op.name.toUpperCase();
+    const res=document.getElementById('cc-result');if(res)res.style.display='block';
+    // Persist both names immediately, whichever button is pressed later
+    S.pendingCC={gageId:gage.id,clientIdx,opIdx:op.idx};save();
+    document.getElementById('cc-start').addEventListener('click',()=>{
+      S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gage.id);
+      addActiveGage(gage.id,clientIdx);
+      S.pendingCC=null;save();
+      ov.remove();renderGages();showPage('gages');
+      bradMsg(`Commande Controlee : ${DISPLAY_NAMES[clientIdx]} est le CLIENT (choisit uniquement la taille). ${op.name} est l'OPERATEUR (choisit le reste du repas). Le BRADDY3000 observe la chaine de commandement.`);
+    });
+    const ccFermer=document.createElement('button');ccFermer.textContent='← Fermer';ccFermer.style.cssText='font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);padding:8px 24px;border:1px solid rgba(255,255,255,.1);margin-top:8px;display:block;';
+    ccFermer.onclick=()=>{ov.remove();renderGages();showPage('gages');};
+    ov.appendChild(ccFermer);
+  }
+
+  if(resumeOpIdx!==undefined&&resumeOpIdx!==null){
+    // Resume directly with saved operator - skip spin animation
+    const op=opPlayersFull.find(p=>p.idx===resumeOpIdx)||opPlayersFull[0];
+    drawRoulette(0,opPlayersFull,document.getElementById('cc-cv'));
+    showResult(op);
+    return;
+  }
+
   let ccAngle=0;
-  const n=opPlayers.length,seg=2*Math.PI/n,tgt=Math.floor(Math.random()*n);
+  const n=opPlayersFull.length,seg=2*Math.PI/n,tgt=Math.floor(Math.random()*n);
   const tBase=(n-tgt)*seg,tot=tBase+(4+Math.floor(Math.random()*2))*2*Math.PI;
   const dur=3000,t0=performance.now();
   (function anim(now){
     const t=Math.min((now-t0)/dur,1);
     ccAngle=(1-Math.pow(1-t,4))*tot;
-    drawRoulette(ccAngle,opPlayers,document.getElementById('cc-cv'));
+    drawRoulette(ccAngle,opPlayersFull,document.getElementById('cc-cv'));
     if(t<1){requestAnimationFrame(anim);}
     else{
-      const op=opPlayers[tgt];
-      document.getElementById('cc-op-name').textContent=op.name.toUpperCase();
       flash(150,true);beep(660,.3,.1);
-      const res=document.getElementById('cc-result');if(res)res.style.display='block';
-      document.getElementById('cc-start').addEventListener('click',()=>{
-        S.pool[S.phase]=(getPool(S.phase)).filter(id=>id!==gage.id);
-        addActiveGage(gage.id,clientIdx);save();ov.remove();renderGages();showPage('gages');
-        bradMsg(`Commande Controlee : ${DISPLAY_NAMES[clientIdx]} est le CLIENT (choisit uniquement la taille). ${op.name} est l'OPERATEUR (choisit le reste du repas). Le BRADDY3000 observe la chaine de commandement.`);
-      });
-      // Add Fermer button
-      const ccFermer=document.createElement('button');ccFermer.textContent='← Fermer';ccFermer.style.cssText='font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);padding:8px 24px;border:1px solid rgba(255,255,255,.1);margin-top:8px;display:block;';ccFermer.onclick=()=>{ov.remove();renderGages();showPage('gages');};ov.appendChild(ccFermer);
+      showResult(opPlayersFull[tgt]);
     }
   })(performance.now());
 }
@@ -759,7 +834,6 @@ function openGageWheel(gages,playerIdx,excludeId,phase){
   ol.classList.remove('hidden');
   document.getElementById('gw-result').classList.add('hidden');
   gwAngle=0;gwSpinning=false;
-  drawGageWheel(gwAngle,gages);
   const colors=['#5a0000','#380000','#7a0000','#440000','#621000','#2d1000'];
   function drawGageWheel(angle,gs){
     const cv=document.getElementById('gw-cv');if(!cv)return;
@@ -779,6 +853,7 @@ function openGageWheel(gages,playerIdx,excludeId,phase){
     ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='#cc0000';ctx.lineWidth=3;ctx.stroke();
     ctx.beginPath();ctx.arc(cx,cy,13,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();ctx.strokeStyle='#cc0000';ctx.lineWidth=2;ctx.stroke();
   }
+  drawGageWheel(gwAngle,gages);
   // auto-spin
   const n=gages.length,tgt=Math.floor(Math.random()*n),seg=2*Math.PI/n;
   const tBase=(n-tgt)*seg;
@@ -989,9 +1064,10 @@ function openMissionParallele(payerKey){
   const mission=available[Math.floor(Math.random()*available.length)];
   S.usedSMIds.push(mission.id);
   const payerIdx=R_KEYS.indexOf(payerKey);
-  S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:payerIdx,status:'active',bc:5});
+  const bc=smBC(mission.id);
+  S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:payerIdx,status:'active',bc});
   save();renderGages();
-  bradAnalyze(()=>{bradMsg(`Analyse terminee. Une donnee supplementaire semble necessaire. Mission parallele transmise a ${DISPLAY_NAMES[payerIdx]} : "${mission.desc}" — +5 BC si reussie.`);});
+  bradAnalyze(()=>{bradMsg(`Analyse terminee. Une donnee supplementaire semble necessaire. Mission parallele transmise a ${DISPLAY_NAMES[payerIdx]} : "${mission.desc}" — +${bc} BC si reussie.`);});
 }
 
 /* IMPOSER UNE MISSION (anciennement Imposer un Gage) */
@@ -1011,9 +1087,10 @@ function openImposerMission(){
       if(!avail2.length){ol.classList.add('hidden');bradMsg("Plus de missions annexes disponibles.");return;}
       const mission=avail2[Math.floor(Math.random()*avail2.length)];
       S.usedSMIds.push(mission.id);
-      S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:targetIdx,status:'active',bc:5});
+      const bc=smBC(mission.id);
+      S.sideMissions.push({missionId:mission.id,missionDesc:mission.desc,playerIdx:targetIdx,status:'active',bc});
       save();ol.classList.add('hidden');renderGages();
-      bradMsg(`Mission annexe imposee a ${DISPLAY_NAMES[targetIdx]} : "${mission.desc}" — +5 BC si reussie.`);
+      bradMsg(`Mission annexe imposee a ${DISPLAY_NAMES[targetIdx]} : "${mission.desc}" — +${bc} BC si reussie.`);
     });
   });
 }
@@ -1036,13 +1113,13 @@ function openBonus(id){
     document.getElementById('bd-title').textContent=info.title;
     document.getElementById('bd-desc').textContent=info.desc;
     const baseCost=CFG.costs[id]?.hippolyte||0;
-    ['hippolyte','nathanael','edwin','teo'].forEach(p=>{
+    ['hippolyte','teo','nathanael'].forEach(p=>{
       const stock=S.stock[id]?.[p]??0,coins=S.coins[p]||0;
       document.getElementById('cost-'+p).textContent=`${coins} BC`;
       const btn=document.querySelector(`.player-btn[data-player="${p}"]`);
       if(btn){btn.classList.remove('selected');btn.style.opacity=(stock>0&&coins>=baseCost)?'1':'.4';}
     });
-    document.getElementById('bd-stock').textContent=`Cout : ${baseCost} BC — Stock : H:${S.stock[id]?.hippolyte??0} / N:${S.stock[id]?.nathanael??0} / E:${S.stock[id]?.edwin??0} / T:${S.stock[id]?.teo??0}`;
+    document.getElementById('bd-stock').textContent=`Cout : ${baseCost} BC — Stock : H:${S.stock[id]?.hippolyte??0} / T:${S.stock[id]?.teo??0} / N:${S.stock[id]?.nathanael??0}`;
     document.getElementById('purchase-confirm').classList.add('hidden');
     document.getElementById('purch-feedback').classList.add('hidden');
     nav('bonus-detail');
@@ -1056,7 +1133,7 @@ function openBonus(id){
 
 const BONUS_INFO={gageSecondaire:{title:'Gage secondaire',desc:'Un gage de secours si celui actuel ne convient pas. Visible sur la carte de gage active.'},refaireRoue:{title:'Refaire la roue',desc:'Retirer un nouveau gage. Visible sur la carte de gage active.'},laisserPasser:{title:'Laisser Passer',desc:'Ignorer un gage sans penalite. Visible sur la carte de gage active.'},doubleTimbre:{title:'Mission Parallele',desc:'Attribue une mission annexe aleatoire en parallele de votre gage principal. +5 BC si reussie.'},imposerGage:{title:'Imposer une Mission',desc:'Assigne une mission annexe aleatoire a un autre joueur. +5 BC si reussie.'},declencherEvenement:{title:'Declencher un evenement',desc:'Active un evenement special via une roue dedicee.'}};
 let curBonus=null,selPl=null;
-function selPlayer(p){if(!curBonus)return;const cost=CFG.costs[curBonus]?.[p]||0,stock=S.stock[curBonus]?.[p]??0,coins=S.coins[p]||0;if(stock<=0||coins<cost)return;selPl=p;document.querySelectorAll('.player-btn').forEach(b=>b.classList.remove('selected'));document.querySelector(`.player-btn[data-player="${p}"]`)?.classList.add('selected');const names={hippolyte:'Hippolyte',nathanael:'Nathanael',edwin:'Edwin',teo:'Teo'};document.getElementById('purch-name').textContent=names[p];document.getElementById('purchase-confirm').classList.remove('hidden');document.getElementById('purch-feedback').classList.add('hidden');}
+function selPlayer(p){if(!curBonus)return;const cost=CFG.costs[curBonus]?.[p]||0,stock=S.stock[curBonus]?.[p]??0,coins=S.coins[p]||0;if(stock<=0||coins<cost)return;selPl=p;document.querySelectorAll('.player-btn').forEach(b=>b.classList.remove('selected'));document.querySelector(`.player-btn[data-player="${p}"]`)?.classList.add('selected');const names={hippolyte:'Hippolyte',nathanael:'Nathanael',teo:'Teo'};document.getElementById('purch-name').textContent=names[p];document.getElementById('purchase-confirm').classList.remove('hidden');document.getElementById('purch-feedback').classList.add('hidden');}
 function confirmPurch(){
   if(!curBonus||!selPl)return;
   const baseCost=CFG.costs[curBonus]?.hippolyte||0,stock=S.stock[curBonus]?.[selPl]??0;
@@ -1081,6 +1158,7 @@ function openMission(gage,playerIdx){
 function initApp(){try{
   initAudio();document.addEventListener('click',()=>{if(AC&&AC.state==='suspended')AC.resume();});
   initPool();startClock();startBradStatus();initMap();renderGages();renderBraddy();renderDossiers();updateBadge();
+  checkDTResumeOnLoad();
   if(!S.chatHistory||S.chatHistory.length===0){setTimeout(()=>bradMsg("Ah. Vous voila enfin. Le BRADDY3000 vous attendait. Moi aussi, je suppose."),1500);}else{renderHistory();}
   document.getElementById('topbar-chat').addEventListener('click',()=>nav('chat'));
   document.getElementById('chat-send-btn').addEventListener('click',sendMsg);
@@ -1210,13 +1288,13 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
   if(txt==='/admin.coins'){Object.keys(S.coins).forEach(p=>S.coins[p]+=5);save();addSysMsg('+5 BC pour tous.');return;}
   if(txt==='/admin.reset'){if(confirm('Reinitialiser ?')){localStorage.removeItem('n2s3');location.reload();}return;}
   if(txt==='/delete'){addUserMsg(txt);bradMsg("Oh Waouh. Tu es sur de vouloir faire ca ? Je veux dire... ca rigole pas ce genre de chose. Toutes les donnees. Les BradCoins. Les gages. Tout. Tape \"oui\" si tu es vraiment sur.");S.waitingForDelete=true;save();return;}
-  if(txt==='/debug'){const ph=PHASES[Math.min(S.phase,5)];const ag=(S.activeGages||[]).map(a=>`${a.gageName}(${DISPLAY_NAMES[a.playerIdx]})`).join(', ')||'aucun';addSysMsg(`Phase ${S.phase} | H:${S.coins.hippolyte} T:${S.coins.teo} E:${S.coins.edwin} N:${S.coins.nathanael} BC`);addSysMsg(`Actifs : ${ag}`);addSysMsg(`Brouillage: ${S.brouillageEnd&&Date.now()<S.brouillageEnd?'ACTIF':'off'} | Prime next: ${S.primeNext||0}`);return;}
+  if(txt==='/debug'){const ph=PHASES[Math.min(S.phase,5)];const ag=(S.activeGages||[]).map(a=>`${a.gageName}(${DISPLAY_NAMES[a.playerIdx]})`).join(', ')||'aucun';addSysMsg(`Phase ${S.phase} | H:${S.coins.hippolyte} T:${S.coins.teo} N:${S.coins.nathanael} BC`);addSysMsg(`Actifs : ${ag}`);addSysMsg(`Brouillage: ${S.brouillageEnd&&Date.now()<S.brouillageEnd?'ACTIF':'off'} | Prime next: ${S.primeNext||0}`);return;}
   if(txt==='/debug.gages'){PHASES.forEach((ph,i)=>{if(ph.gages?.length)ph.gages.forEach(g=>{addSysMsg(`P${i} ${S.doneGages?.includes(g.id)?'✓':'○'} ${g.id} — ${g.name}`);});});return;}
-  if(txt==='/debug.coins'){addSysMsg(`H:${S.coins.hippolyte} | T:${S.coins.teo} | E:${S.coins.edwin} | N:${S.coins.nathanael}`);return;}
+  if(txt==='/debug.coins'){addSysMsg(`H:${S.coins.hippolyte} | T:${S.coins.teo} | N:${S.coins.nathanael}`);return;}
   if(txt==='/debug.reset.gages'){S.doneGages=[];S.activeGages=[];S.gageHistory=[];S.pool={};save();renderGages();addSysMsg('Gages et pool reinitialises.');return;}
   if(txt==='/liste'){addSysMsg('=== TOUTES LES COMMANDES ===');addSysMsg('/liste — cette liste');addSysMsg('/debug — etat (phase/BC/actifs/effets)');addSysMsg('/debug.gages — tous gages par phase');addSysMsg('/debug.coins — soldes BradCoins');addSysMsg('/debug.reset.gages — reinitialise tout');addSysMsg('/add.coins:H:50 — ajouter BC (H/T/E/N)');addSysMsg('/test.gage p1g1 — tester roulette');addSysMsg('/test.mission p1g1 — ouvrir mission');addSysMsg('/admin.p1 a /admin.p5 — debloquer phase');addSysMsg('/admin.coins — +5 BC tous');addSysMsg('/admin.reset — reset complet');addSysMsg('/delete — reset cinematique Brad');return;}
-  if(txt.startsWith('/add.coins:')){const pts=txt.split(':');if(pts.length===3){const ltr=pts[1].toUpperCase(),amt=parseInt(pts[2]);const pm={'H':'hippolyte','T':'teo','E':'edwin','N':'nathanael'};const pk=pm[ltr];if(pk&&!isNaN(amt)&&amt>0){S.coins[pk]=(S.coins[pk]||0)+amt;save();addSysMsg(`+${amt} BC → ${DISPLAY_NAMES[R_KEYS.indexOf(pk)]}`);renderBraddy();}else addSysMsg('Format: /add.coins:H:50 — H T E N');}return;}
-  if(txt.startsWith('/test.gage ')){const gid=txt.slice(11).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST ROULETTE — ${found.name}`);setTimeout(()=>openRoulette(found),300);}else addSysMsg(`Gage "${gid}" introuvable. (ex: p1g1, p2g3, p5g4)`);return;}
+  if(txt.startsWith('/add.coins:')){const pts=txt.split(':');if(pts.length===3){const ltr=pts[1].toUpperCase(),amt=parseInt(pts[2]);const pm={'H':'hippolyte','T':'teo','N':'nathanael'};const pk=pm[ltr];if(pk&&!isNaN(amt)&&amt>0){S.coins[pk]=(S.coins[pk]||0)+amt;save();addSysMsg(`+${amt} BC → ${DISPLAY_NAMES[R_KEYS.indexOf(pk)]}`);renderBraddy();}else addSysMsg('Format: /add.coins:H:50 — H T N');}return;}
+  if(txt.startsWith('/test.gage ')){const gid=txt.slice(11).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST ROULETTE — ${found.name}`);setTimeout(()=>openRoulette(found),300);}else addSysMsg(`Gage "${gid}" introuvable. (ex: p1g1, p2g3, p5g2)`);return;}
   if(txt.startsWith('/test.mission ')){const gid=txt.slice(14).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST MISSION — ${found.name}`);openMission(found,Math.floor(Math.random()*4));}else addSysMsg(`Gage introuvable.`);return;}
   const upper=txt.toUpperCase();if(CFG.phaseCodes[upper]!==undefined){advancePhase(CFG.phaseCodes[upper]);addSysMsg(`CODE VALIDE — Phase ${CFG.phaseCodes[upper]} deverouilee.`);return;}
   // sg3 pronostic detection
@@ -1251,77 +1329,181 @@ const AIDE={
 };
 function openAide(id){const d=AIDE[id];if(!d)return;document.getElementById('ad-title').textContent=d.title;document.getElementById('ad-body').innerHTML=d.body;nav('aide-detail');}
 
-/* DOUBLE TROUBLE INTERFACE */
-function openDTInterface(){
-  const shuffled=[...DISPLAY_NAMES].map((n,i)=>({name:n,key:R_KEYS[i]})).sort(()=>Math.random()-.5);
-  const teamA=shuffled.slice(0,2),teamB=shuffled.slice(2,4);
-  S.dtTeamA=teamA.map(p=>R_KEYS.indexOf(p.key));S.dtTeamB=teamB.map(p=>R_KEYS.indexOf(p.key));save();
-  const ph=PHASES[Math.min(S.phase,5)];
-  document.getElementById('dt-ol-title-el').innerHTML=`${BOLT_SVG} DOUBLE TROUBLE ${BOLT_SVG}`;
-  document.getElementById('dt-ol-note').textContent='Petite quantité uniquement — éviter le gaspillage';
-  document.getElementById('dt-ol-teams').innerHTML=`
-    <div class="dt-ol-team dt-ol-a">
-      <div class="dt-ol-team-label">ÉQUIPE A — FROMAGE</div>
-      <div class="dt-ol-task">${ph.dt?.a||'Trouver du fromage à raclette.'}</div>
-      <div class="dt-ol-players">${teamA.map(p=>`<div class="dt-ol-player">${p.name}</div>`).join('')}</div>
-    </div>
-    <div class="dt-ol-team dt-ol-b">
-      <div class="dt-ol-team-label">ÉQUIPE B — CHARCUTERIE</div>
-      <div class="dt-ol-task">${ph.dt?.b||'Trouver du Serrano.'}</div>
-      <div class="dt-ol-players">${teamB.map(p=>`<div class="dt-ol-player">${p.name}</div>`).join('')}</div>
-    </div>`;
+/* DOUBLE TROUBLE — nouvelle mecanique (evenement scenarise, reserve commune) */
+
+const DT_ALERT_LINES = [
+  "ALERTE",
+  "Le BRADDY3000 vient de detecter plusieurs anomalies simultanees.",
+  "Les signatures de Kirby 67 apparaissent puis disparaissent de facon totalement aleatoire.",
+  "Les donnees risquent d'etre perdues definitivement.",
+  "Afin d'augmenter les chances de localisation, le BRADDY3000 active le protocole :",
+  "DOUBLE TROUBLE",
+  "Durant les prochaines minutes, plusieurs missions secondaires seront accessibles simultanement.",
+  "Chaque mission accomplie rapportera des Brad Coins supplementaires.",
+  "Ces Brad Coins ne seront pas attribues individuellement.",
+  "Ils seront stockes dans une reserve commune.",
+  "A la fin du Double Trouble, le total sera partage equitablement entre les trois participants.",
+  "Le temps est limite.",
+  "Le BRADDY3000 compte sur vous.",
+];
+
+function openDTIntro(){
   const ol=document.getElementById('dt-ol');
   ol.classList.remove('hidden');
-  document.getElementById('dt-countdown-wrap').classList.add('hidden');
-  document.getElementById('dt-go-section').classList.add('hidden');
-  document.getElementById('dt-ol-actions').classList.remove('hidden');
-  document.getElementById('dt-ol-start-btn').disabled=false;
-  // Wire buttons
-  const startBtn=document.getElementById('dt-ol-start-btn');
-  const cancelBtn=document.getElementById('dt-ol-cancel-btn');
-  const doneBtn=document.getElementById('dt-ol-done-btn');
-  const newStart=startBtn.cloneNode(true);startBtn.parentNode.replaceChild(newStart,startBtn);
-  const newCancel=cancelBtn.cloneNode(true);cancelBtn.parentNode.replaceChild(newCancel,cancelBtn);
-  const newDone=doneBtn.cloneNode(true);doneBtn.parentNode.replaceChild(newDone,doneBtn);
-  document.getElementById('dt-ol-cancel-btn').addEventListener('click',()=>ol.classList.add('hidden'));
-  document.getElementById('dt-ol-start-btn').addEventListener('click',()=>{
-    document.getElementById('dt-ol-actions').classList.add('hidden');
-    startDTCountdown();
+  document.getElementById('dt-intro-section').classList.remove('hidden');
+  document.getElementById('dt-title-section').classList.add('hidden');
+  document.getElementById('dt-missions-section').classList.add('hidden');
+  document.getElementById('dt-end-section').classList.add('hidden');
+  const linesEl=document.getElementById('dt-intro-lines');
+  linesEl.innerHTML='';
+  glitchSnd(.2);shake(4,300);
+  let i=0,skipped=false;
+  function showNext(){
+    if(skipped)return;
+    if(i>=DT_ALERT_LINES.length){setTimeout(()=>{if(!skipped)transitionToTitle();},900);return;}
+    const p=document.createElement('p');
+    p.className=i===0||i===5?'dt-intro-big':'dt-intro-line';
+    p.textContent=DT_ALERT_LINES[i];
+    p.style.opacity='0';
+    linesEl.appendChild(p);
+    setTimeout(()=>p.style.opacity='1',20);
+    beep(180+Math.random()*150,.04,.04,'square');
+    if(Math.random()>.7)shake(2,120);
+    i++;
+    setTimeout(showNext,i<=1?700:i===6?900:550);
+  }
+  showNext();
+  const skipBtn=document.getElementById('dt-intro-skip');
+  skipBtn.onclick=()=>{skipped=true;transitionToTitle();};
+}
+
+function transitionToTitle(){
+  flash(200,true);glitchSnd(.2);shake(5,300);
+  document.getElementById('dt-intro-section').classList.add('hidden');
+  document.getElementById('dt-title-section').classList.remove('hidden');
+  beep(880,.5,.15,'sine');
+  setTimeout(()=>{startDoubleTrouble();},1800);
+}
+
+function startDoubleTrouble(){
+  S.dtActive=true;S.dtStart=Date.now();S.dtPoolBC=0;save();
+  document.getElementById('dt-title-section').classList.add('hidden');
+  openDTMissionsOverlay();
+}
+
+let dtOverlayInterval=null;
+function openDTMissionsOverlay(){
+  const ol=document.getElementById('dt-ol');
+  ol.classList.remove('hidden');
+  document.getElementById('dt-intro-section').classList.add('hidden');
+  document.getElementById('dt-title-section').classList.add('hidden');
+  document.getElementById('dt-end-section').classList.add('hidden');
+  document.getElementById('dt-missions-section').classList.remove('hidden');
+  renderDTMissionsGrid();
+  if(dtOverlayInterval)clearInterval(dtOverlayInterval);
+  dtOverlayInterval=setInterval(()=>{
+    const rem=Math.max(0,Math.floor(((S.dtStart+10*60*1000)-Date.now())/1000));
+    const timerEl=document.getElementById('dt-timer-live');
+    if(timerEl){const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');timerEl.textContent=mm+':'+ss;}
+    if(rem===0){clearInterval(dtOverlayInterval);endDoubleTrouble();}
+  },1000);
+  document.getElementById('dt-minimize-btn').onclick=()=>{
+    if(dtOverlayInterval)clearInterval(dtOverlayInterval);
+    ol.classList.add('hidden');renderGages();
+  };
+}
+
+function renderDTMissionsGrid(){
+  const grid=document.getElementById('dt-missions-grid');
+  const poolEl=document.getElementById('dt-pool-val');
+  if(poolEl)poolEl.textContent=S.dtPoolBC||0;
+  const rem=Math.max(0,Math.floor(((S.dtStart+10*60*1000)-Date.now())/1000));
+  const timerEl=document.getElementById('dt-timer-live');
+  if(timerEl){const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');timerEl.textContent=mm+':'+ss;}
+  const available=SIDE_MISSIONS.filter(sm=>!(S.usedSMIds||[]).includes(sm.id));
+  if(!grid)return;
+  if(!available.length){
+    grid.innerHTML='<p class="dt-empty-hint">Toutes les missions ont ete recoltees. Le BRADDY3000 patiente jusqu\'a la fin du chrono.</p>';
+    return;
+  }
+  let h='';
+  DT_TIERS.forEach(tier=>{
+    const tierMissions=available.filter(sm=>sm.tier===tier.n);
+    if(!tierMissions.length)return;
+    h+=`<div class="dt-tier-label" style="color:${tier.color}">NIVEAU ${tier.n} — ${tier.name.toUpperCase()} (+${tier.bc} BC)</div>`;
+    tierMissions.forEach(sm=>{
+      h+=`<button class="dt-mission-card" style="border-color:${tier.color}" data-smid="${sm.id}"><span class="dt-mission-desc">${sm.desc}</span><span class="dt-mission-bc" style="color:${tier.color}">+${tier.bc} BC</span></button>`;
+    });
   });
-  document.getElementById('dt-ol-done-btn').addEventListener('click',()=>{
-    S.doneDT=true;save();ol.classList.add('hidden');
-    beep(440,.5,.1,'sine');checkPhase1Complete();renderGages();
-    bradMsg('Double Trouble... accompli. Le BRADDY3000 enregistre le résultat. Bien joué aux deux équipes.');
+  grid.innerHTML=h;
+  grid.querySelectorAll('.dt-mission-card').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const smid=btn.dataset.smid;
+      validateDTMission(smid);
+    });
   });
 }
 
-function startDTCountdown(){
-  const wrap=document.getElementById('dt-countdown-wrap');
-  const numEl=document.getElementById('dt-count-num');
-  wrap.classList.remove('hidden');
-  let n=3;
-  function tick(){
-    numEl.textContent=n;
-    numEl.className='dt-count-num dt-count-anim';
-    void numEl.offsetWidth;
-    numEl.className='dt-count-num dt-count-anim';
-    beep(n===1?660:440,.25,.15,'sine');
-    if(n>1){n--;setTimeout(tick,950);}
-    else{
+function validateDTMission(smid){
+  if(!S.usedSMIds)S.usedSMIds=[];
+  if(S.usedSMIds.includes(smid))return;
+  const bc=smBC(smid);
+  S.usedSMIds.push(smid);
+  S.dtPoolBC=(S.dtPoolBC||0)+bc;
+  save();
+  flash(100,true);beep(660,.2,.1,'sine');
+  renderDTMissionsGrid();
+}
+
+function endDoubleTrouble(){
+  if(dtOverlayInterval)clearInterval(dtOverlayInterval);
+  const ol=document.getElementById('dt-ol');
+  ol.classList.remove('hidden');
+  document.getElementById('dt-missions-section').classList.add('hidden');
+  document.getElementById('dt-end-section').classList.remove('hidden');
+  const total=S.dtPoolBC||0;
+  const share=Math.floor(total/3);
+  const linesEl=document.getElementById('dt-end-lines');
+  linesEl.innerHTML='';
+  flash(300,true);glitchSnd(.2);shake(5,400);
+  const endLines=[
+    "Analyse terminee.",
+    "Synchronisation des donnees...",
+    "Termine.",
+    "Le BRADDY3000 a recupere suffisamment d'informations pour poursuivre les recherches.",
+    `Total des donnees recoltees : ${total} Brad Coins`,
+    "Repartition en cours...",
+    `${share} Brad Coins attribues a chaque participant.`,
+    "Excellent travail.",
+    "Les recherches de Kirby 67 peuvent reprendre.",
+  ];
+  let i=0;
+  const next=()=>{
+    if(i>=endLines.length){
       setTimeout(()=>{
-        flash(200,true);beep(880,.4,.2,'sine');shake(4,300);
-        wrap.classList.add('hidden');
-        S.dtGoTime=Date.now();save();
-        const gs=document.getElementById('dt-go-section');
-        gs.classList.remove('hidden');
-        // Add live timer
-        const timerEl=document.createElement('p');timerEl.id='dt-elapsed';timerEl.style.cssText='font-family:var(--orb);font-size:14px;color:rgba(255,255,255,.5);letter-spacing:.3em;margin-bottom:12px;';
-        gs.insertBefore(timerEl,gs.querySelector('.dt-go-sub'));
-        const dtTick=setInterval(()=>{const el=document.getElementById('dt-elapsed');if(!el){clearInterval(dtTick);return;}const e=Math.floor((Date.now()-S.dtGoTime)/1000);const m=String(Math.floor(e/60)).padStart(2,'0'),s=String(e%60).padStart(2,'0');el.textContent=`CHRONO : ${m}:${s}`;},1000);
-      },900);
+        R_KEYS.forEach(k=>{S.coins[k]=(S.coins[k]||0)+share;});
+        S.doneDT=true;S.dtActive=false;save();
+        ol.classList.add('hidden');
+        renderGages();renderBraddy();
+        checkPhase1Complete();
+        bradMsg(`Retour au deroulement normal de l'operation Never 2 sans 3. ${share} BC ont ete crediteo a chacun de vous.`);
+      },1200);
+      return;
     }
+    const p=document.createElement('p');p.className='dt-intro-line';p.textContent=endLines[i];p.style.opacity='0';
+    linesEl.appendChild(p);setTimeout(()=>p.style.opacity='1',20);
+    beep(200+Math.random()*300,.05,.05,'square');
+    i++;setTimeout(next,650);
+  };
+  setTimeout(next,500);
+}
+
+// Resume check on load: if DT was active and time already expired while away, resolve it immediately.
+function checkDTResumeOnLoad(){
+  if(S.dtActive&&!S.doneDT){
+    const rem=(S.dtStart+10*60*1000)-Date.now();
+    if(rem<=0){setTimeout(()=>endDoubleTrouble(),800);}
   }
-  setTimeout(tick,200);
 }
 
 /* RESET ANIMATION */
