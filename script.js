@@ -58,7 +58,7 @@ function smBC(id){const sm=SIDE_MISSIONS.find(s=>s.id===id);const t=DT_TIERS.fin
 function smTier(id){const sm=SIDE_MISSIONS.find(s=>s.id===id);return DT_TIERS.find(t=>t.n===sm?.tier);}
 
 const EVENTS = [
-  {id:'ev1',name:'SYNCHRONISATION FORCEE',desc:'Les 4 agents se prennent en photo dans une posture imposee decidee par Brad Bitt. 30 secondes pour trouver la pose.'},
+  {id:'ev1',name:'SYNCHRONISATION FORCEE',desc:'Les 3 agents se prennent en photo dans une posture imposee decidee par Brad Bitt. 30 secondes pour trouver la pose.'},
   {id:'ev2',name:'TRADUCTION EN DIRECT',desc:'Pendant 10 minutes, chaque phrase doit se terminer par "...et je pense que Brad serait d\'accord".'},
   {id:'ev3',name:'AUDIT BRADDY3000',desc:'Chaque agent recite de memoire le nom complet du BRADDY3000 et l\'orthographe exacte de "Kirby 67".'},
   {id:'ev4',name:'MODE TOURISTE',desc:'Demander a 2 inconnus de prendre le groupe en photo, comme si vous visitiez Lille pour la toute premiere fois.'},
@@ -90,7 +90,7 @@ const PHASES = [
   {name:'PHASE 3 — RUPTURE NARRATIVE',desc:'Evenement special',rupture:true,gages:[],contracts:[],dt:null},
   {
     name:'PHASE 4 — RELOOKING',desc:'Phase critique — Contrats BRADDY3000',
-    gages:[{id:'p4g1',name:'Relooking Brad Corporation',desc:'Trois participants choisissent chaussures, haut et accessoire. Le quatrieme essaie la tenue, demande un avis et prend une photo.',bc:5,team:true}],
+    gages:[{id:'p4g1',name:'Relooking Brad Corporation',desc:'Deux participants choisissent chaussures, haut et accessoire. Le troisieme essaie la tenue, demande un avis et prend une photo.',bc:5,team:true}],
     contracts:[
       {name:'Synchronisation BRADDY3000',desc:'Deux participants se tiennent la main pendant 20 minutes.',reward:'Multiplicateur x1.5'},
       {name:'Liaison Satellite',desc:'Deux participants restent a moins de 2m.',reward:'+BC'},
@@ -633,7 +633,8 @@ function checkPhaseTime(){
 function startClock(){function u(){const n=new Date();document.getElementById('time-disp').textContent=`${String(n.getHours()).padStart(2,'0')}h${String(n.getMinutes()).padStart(2,'0')}`;checkPhaseTime();}u();setInterval(u,10000);}
 
 const DEF_STATUS=['Brad en ligne','Brad analyse les donnees','Brad recherche Kirby 67','Brad compile les rapports','Brad prepare une transmission','Brad surveille le BRADDY3000','Brad traite une anomalie','Brad est en pause dejeuner','Brad est temporairement indisponible'];
-function startBradStatus(){function u(){const el=document.getElementById('brad-status-lbl');if(el)el.textContent=DEF_STATUS[Math.floor(Math.random()*DEF_STATUS.length)];}u();setInterval(u,3*60*1000);}
+let currentBradStatus=DEF_STATUS[0];
+function startBradStatus(){function u(){currentBradStatus=DEF_STATUS[Math.floor(Math.random()*DEF_STATUS.length)];const el=document.getElementById('brad-status-lbl');if(el)el.textContent=currentBradStatus;}u();setInterval(u,3*60*1000);}
 
 
 
@@ -655,7 +656,7 @@ function openRoulette(gage){
   document.getElementById('roll-result').classList.add('hidden');
   document.getElementById('roll-btn').disabled=false;
   const excl=S.phaseExcluded?.length||0;
-  document.getElementById('roll-btn').textContent=excl?`TOURNER (${4-excl} restants)`:'TOURNER';
+  document.getElementById('roll-btn').textContent=excl?`TOURNER (${Math.max(R_KEYS.length-excl,1)} restants)`:'TOURNER';
   document.getElementById('roll-pre-close').style.display='';
   document.getElementById('roulette-ol').classList.remove('hidden');
   setTimeout(()=>drawRoulette(rAngle),50);
@@ -774,9 +775,11 @@ function openCommandeControlee(clientIdx,gage,resumeOpIdx){
     </div>`;
   document.body.appendChild(ov);
 
-  function showResult(op){
+  function showResult(op,isResume){
     document.getElementById('cc-op-name').textContent=op.name.toUpperCase();
     const res=document.getElementById('cc-result');if(res)res.style.display='block';
+    const startBtn=document.getElementById('cc-start');
+    if(startBtn)startBtn.innerHTML=isResume?'&#8627; CONTINUER':'&#8627; COMMENCER LA MISSION';
     // Persist both names immediately, whichever button is pressed later
     S.pendingCC={gageId:gage.id,clientIdx,opIdx:op.idx};save();
     document.getElementById('cc-start').addEventListener('click',()=>{
@@ -795,7 +798,7 @@ function openCommandeControlee(clientIdx,gage,resumeOpIdx){
     // Resume directly with saved operator - skip spin animation
     const op=opPlayersFull.find(p=>p.idx===resumeOpIdx)||opPlayersFull[0];
     drawRoulette(0,opPlayersFull,document.getElementById('cc-cv'));
-    showResult(op);
+    showResult(op,true);
     return;
   }
 
@@ -810,7 +813,7 @@ function openCommandeControlee(clientIdx,gage,resumeOpIdx){
     if(t<1){requestAnimationFrame(anim);}
     else{
       flash(150,true);beep(660,.3,.1);
-      showResult(opPlayersFull[tgt]);
+      showResult(opPlayersFull[tgt],false);
     }
   })(performance.now());
 }
@@ -1051,7 +1054,7 @@ function applyEventEffect(evId){
   else if(evId==='ev3'){S.primeNext=(S.primeNext||0)+10;save();setTimeout(()=>bradMsg("PRIME EXCEPTIONNELLE enregistree. Le prochain gage reussi rapportera +10 BC bonus. Le BRADDY3000 est genereux. Rarement, mais c'est le cas."),200);}
   else if(evId==='ev4'){glitchSnd(.2);shake(3,1000);setTimeout(()=>bradMsg("DONNEES CORROMPUES. Le classement affiche pourrait etre temporairement inexact. Le score reel, lui, ne change pas."),200);}
   else if(evId==='ev5'){const pool=getPool(S.phase);const nextG=pool.length?getGageById(pool[0]):null;setTimeout(()=>bradMsg(nextG?`ANALYSE ACCELEREE. Prochain gage disponible : "${nextG.name}". Vous etes en avance sur le programme.`:"ANALYSE ACCELEREE. Aucun gage disponible a reveler dans cette phase."),200);}
-  else if(evId==='ev6'){setTimeout(()=>bradMsg("MISSION SURPRISE. Les 4 agents doivent choisir une danse TikTok et l'executer ensemble. Duree minimale : 15 secondes. La honte est optionnelle mais recommandee par le BRADDY3000."),200);}
+  else if(evId==='ev6'){setTimeout(()=>bradMsg("MISSION SURPRISE. Les 3 agents doivent choisir une danse TikTok et l'executer ensemble. Duree minimale : 15 secondes. La honte est optionnelle mais recommandee par le BRADDY3000."),200);}
   else if(evId==='ev7'){S.bradLostUntil=Date.now()+3*60*1000;save();setTimeout(()=>bradMsg("...je suis Brad. Ou peut-etre pas. Le BRADDY3000 semble avoir oublie quelque chose. Je vous contacterai quand j'aurai resolu le probleme."),200);}
   else if(evId==='ev8'){S.glitchModeUntil=Date.now()+90*1000;save();glitchSnd(.25);let gc=0;const gi=setInterval(()=>{if(Date.now()>S.glitchModeUntil||gc>15){clearInterval(gi);document.body.style.transform='';return;}shake(Math.random()*6+2,150+Math.random()*200);glitchSnd(.15);if(Math.random()>.5)flash(40+Math.random()*80,Math.random()>.5);gc++;},3000+Math.random()*4000);setTimeout(()=>bradMsg("PARASITES DETECTES. Recalibration en cours... Aucun impact sur le gameplay. Le BRADDY3000 resist. En principe."),200);}
 }
@@ -1303,6 +1306,15 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
     bradMsg("Pronostic enregistre. Les modeles predictifs du BRADDY3000 viennent d'etre mis a jour. En cas de victoire francaise, je considererai officiellement votre intuition comme une technologie de pointe.");
     return;
   }
+  // Pause dejeuner + "tu manges quoi"
+  if(currentBradStatus==='Brad est en pause dejeuner'){
+    const lowerCheck=txt.toLowerCase();
+    if((lowerCheck.includes('manges')||lowerCheck.includes('mange'))&&lowerCheck.includes('quoi')){
+      addUserMsg(txt);
+      bradMsg("Une raclette bien evidemment, nan je rigole, des sushis.");
+      return;
+    }
+  }
   // bradLostUntil check
   if(S.bradLostUntil&&Date.now()<S.bradLostUntil){
     addUserMsg(txt);
@@ -1356,11 +1368,21 @@ function openDTIntro(){
   document.getElementById('dt-end-section').classList.add('hidden');
   const linesEl=document.getElementById('dt-intro-lines');
   linesEl.innerHTML='';
+  const contBtn=document.getElementById('dt-intro-continue');
+  if(contBtn)contBtn.classList.add('hidden');
   glitchSnd(.2);shake(4,300);
   let i=0,skipped=false;
   function showNext(){
     if(skipped)return;
-    if(i>=DT_ALERT_LINES.length){setTimeout(()=>{if(!skipped)transitionToTitle();},900);return;}
+    if(i>=DT_ALERT_LINES.length){
+      // Laisser 15 secondes pour lire avant de faire apparaitre le bouton
+      setTimeout(()=>{
+        if(skipped)return;
+        const cb=document.getElementById('dt-intro-continue');
+        if(cb){cb.classList.remove('hidden');beep(660,.15,.08,'sine');}
+      },15000);
+      return;
+    }
     const p=document.createElement('p');
     p.className=i===0||i===5?'dt-intro-big':'dt-intro-line';
     p.textContent=DT_ALERT_LINES[i];
@@ -1375,6 +1397,7 @@ function openDTIntro(){
   showNext();
   const skipBtn=document.getElementById('dt-intro-skip');
   skipBtn.onclick=()=>{skipped=true;transitionToTitle();};
+  if(contBtn)contBtn.onclick=()=>{skipped=true;transitionToTitle();};
 }
 
 function transitionToTitle(){
