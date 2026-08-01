@@ -471,3 +471,5 @@ body{background:linear-gradient(180deg,#230000 0%,#0b0000 18%,#000 40%,#0f0000 5
 .dt-in-progress{border-color:rgba(0,255,65,.4);background:rgba(0,40,15,.25);}
 .dt-chrono{font-family:var(--orb);font-size:28px;font-weight:900;color:#00ff41;letter-spacing:.2em;text-align:center;margin:10px 0;text-shadow:0 0 20px rgba(0,255,65,.5);}
 .player-grid-3{grid-template-columns:repeat(3,1fr)!important;}
+.dt-intro-continue-btn{font-family:var(--orb);font-size:14px;font-weight:700;letter-spacing:.35em;padding:16px 40px;background:rgba(204,0,0,.2);border:2px solid var(--red);color:var(--white);animation:actGl 1.5s ease-in-out infinite;margin-bottom:10px;}
+.dt-intro-continue-btn:active{background:rgba(204,0,0,.4);}
