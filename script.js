@@ -82,7 +82,7 @@ const PHASES = [
     name:'PHASE 2 — DEJEUNER',desc:'Collecte intensive',
     gages:[
       {id:'p2g1',name:'Commande Controlee',desc:"Le participant choisit uniquement la taille de son repas. Le reste est decide par un autre joueur.",bc:5},
-      {id:'p2g3',name:'Serrano Secret',desc:'Integrer le Serrano achete precedemment dans son repas.',bc:5},
+      {id:'p2g3',name:'Serrano Secret',desc:"Acheter du Serrano et l'ajouter dans le tacos.",bc:5},
       {id:'p2g4',name:'Influenceur Culinaire',desc:'Presenter son repas comme une revolution technologique.',bc:5},
     ],
     contracts:[],dt:null
@@ -313,7 +313,7 @@ document.getElementById('btn-enter-app').addEventListener('click',()=>enterApp()
 
 
 /* MAP */
-const ZONES=[{id:'alpha',name:'ZONE ALPHA',x:18,y:22,ph:0},{id:'beta',name:'ZONE BETA',x:68,y:38,ph:1},{id:'gamma',name:'ZONE GAMMA',x:32,y:60,ph:2},{id:'delta',name:'ZONE DELTA',x:72,y:68,ph:3},{id:'omega',name:'[ CLASSIFIE ]',x:50,y:47,ph:5}];
+const ZONES=[{id:'alpha',name:'ZONE RÉTRO',x:18,y:22,ph:0},{id:'beta',name:'ZONE FROMAGÈRE',x:68,y:38,ph:1},{id:'gamma',name:'ZONE VIDE GRENIER',x:32,y:60,ph:2},{id:'delta',name:'ZONE ULTIME',x:72,y:68,ph:3},{id:'omega',name:'[ CLASSIFIE ]',x:50,y:47,ph:5}];
 
 function initMap(){
   const c=document.getElementById('zones-container');c.innerHTML='';
@@ -676,7 +676,15 @@ function drawRoulette(angle,players,cv){
     ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,r,sA,eA);ctx.closePath();
     ctx.fillStyle=pl[i].color;ctx.fill();ctx.strokeStyle='rgba(204,0,0,.8)';ctx.lineWidth=2;ctx.stroke();
     const tx=cx+Math.cos(mA)*r*(n===1?.0:.65),ty=cy+Math.sin(mA)*r*(n===1?.0:.65);
-    ctx.save();ctx.translate(n===1?cx:tx,n===1?cy:ty);if(n!==1)ctx.rotate(mA+Math.PI/2);
+    ctx.save();ctx.translate(n===1?cx:tx,n===1?cy:ty);
+    if(n!==1){
+      let rot=mA+Math.PI/2;
+      rot=((rot%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+      if(rot>Math.PI)rot-=2*Math.PI;
+      if(rot>Math.PI/2)rot-=Math.PI;
+      if(rot<-Math.PI/2)rot+=Math.PI;
+      ctx.rotate(rot);
+    }
     ctx.fillStyle='rgba(255,255,255,.9)';ctx.font=`bold ${n===1?14:11}px monospace`;
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(pl[i].name,0,0);ctx.restore();
   }
@@ -777,7 +785,7 @@ function openCommandeControlee(clientIdx,gage,resumeOpIdx){
 
   function showResult(op,isResume){
     document.getElementById('cc-op-name').textContent=op.name.toUpperCase();
-    const res=document.getElementById('cc-result');if(res)res.style.display='block';
+    const res=document.getElementById('cc-result');if(res){res.classList.remove('hidden');res.style.display='block';}
     const startBtn=document.getElementById('cc-start');
     if(startBtn)startBtn.innerHTML=isResume?'&#8627; CONTINUER':'&#8627; COMMENCER LA MISSION';
     // Persist both names immediately, whichever button is pressed later
@@ -1304,6 +1312,13 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
   if((S.activeGages||[]).some(ag=>ag.gageId==='sg3')&&/\d+\s*-\s*\d+/.test(txt)){
     addUserMsg(txt);
     bradMsg("Pronostic enregistre. Les modeles predictifs du BRADDY3000 viennent d'etre mis a jour. En cas de victoire francaise, je considererai officiellement votre intuition comme une technologie de pointe.");
+    return;
+  }
+  // sm4 pronostic detection (Double Trouble / mission annexe France-Italie)
+  const sm4Relevant=(S.sideMissions||[]).some(sm=>sm.missionId==='sm4'&&sm.status==='active')||(S.dtActive&&!(S.usedSMIds||[]).includes('sm4'));
+  if(sm4Relevant&&/\d+\s*-\s*\d+/.test(txt)){
+    addUserMsg(txt);
+    bradMsg("Tres bien. Je note ce resultat. Je miserai tous mes Brad Coins dessus.");
     return;
   }
   // Pause dejeuner + "tu manges quoi"
