@@ -2,8 +2,8 @@
 /* N2S3 PROTOCOL v4.0 */
 
 const CFG = {
-  youtubeId: 'VIDEO_ID_ICI',
-  targetDate: new Date('2026-08-05T11:00:00+02:00'),
+  youtubeId: 'qCUOkAO7fq4',
+  targetDate: new Date('2026-08-05T10:30:00+02:00'),
   phaseCodes: {'BRADDY-ALPHA':1,'BRADDY-BRAVO':2,'BRADDY-CHARLIE':3,'BRADDY-DELTA':4,'BRADDY-OMEGA':5},
   costs: {
     gageSecondaire:{hippolyte:15,nathanael:15,teo:15},
@@ -33,7 +33,7 @@ const EV_COLORS  = ['#1a0040','#002a1a','#1a1500','#001a2a','#2a0020','#0a1500']
 const SECONDARY_GAGES = [
   {id:'sg1',name:"L'Expert Local",desc:"Demander a un passant : Selon vous, quel est le meilleur endroit a visiter a Lille ? Puis raconter la reponse au groupe.",bc:5},
   {id:'sg2',name:"L'Inspection BRADDY3000",desc:"Entrer dans un magasin et demander au vendeur : Quel est l'article le plus original ou insolite que vous vendez actuellement ? Le montrer ou le decrire au groupe.",bc:5},
-  {id:'sg3',name:"Pronostic du futur",desc:"Demander a un passant : Selon vous, quel sera le resultat du quart de finale de la Coupe du monde 2030 entre la France et l'Italie, Zidane etant selectonneur ? Transmettre le score au BRADDY3000.",bc:5},
+  {id:'sg3',name:"Pronostic du futur",desc:"Demander a un passant : Selon vous, quel sera le resultat du premier match de Zinedine Zidane en tant que selectionneur de l'equipe de France, prevu le 2 octobre (face a l'Italie) ? Transmettre le score au BRADDY3000.",bc:5},
   {id:'sg4',name:"Transmission Prioritaire",desc:"Demander a un inconnu de choisir un nombre entre 1 et 10. Annoncer tres serieusement au groupe : Le BRADDY3000 enregistre la valeur... transmission validee.",bc:5},
 ];
 
@@ -48,7 +48,7 @@ const SIDE_MISSIONS = [
   {id:"sm1",tier:1,desc:"Trouver dans un magasin ou dans la rue un objet qui fait immediatement penser au YouTuber Asterion (couleur, symbole, personnage...) et le montrer au groupe."},
   {id:"sm2",tier:1,desc:"Apprendre a dire 'jambon' en langage des signes. L'objectif est uniquement d'apprendre le geste."},
   {id:"sm3",tier:1,desc:"Prendre en photo un appareil a raclette apercu dans un magasin. Cette photo doit devenir le fond d'ecran du telephone jusqu'a la fin de la journee."},
-  {id:"sm4",tier:2,desc:"Demander a un passant : Selon vous, quel sera le resultat du quart de finale France - Italie de la Coupe du Monde 2030, avec Zinedine Zidane comme selectionneur ? Transmettre le resultat au BRADDY3000 via le chat."},
+  {id:"sm4",tier:2,desc:"Demander a un passant : Selon vous, quel sera le resultat du premier match de Zinedine Zidane en tant que selectionneur de l'equipe de France, prevu le 2 octobre (face a l'Italie) ? Transmettre le resultat au BRADDY3000 via le chat."},
   {id:"sm5",tier:2,desc:"Trouver un objet particulierement etrange, insolite ou inattendu dans un magasin ou dans la rue. Le groupe valide ensemble si l'objet merite cette qualification."},
   {id:"sm6",tier:3,desc:"Publier une story privee (visible uniquement par un cercle restreint d'amis si souhaite) vantant les merites de la raclette."},
   {id:"sm7",tier:3,desc:"Convaincre un inconnu de faire un dab devant l'objectif ou devant le groupe. Le tout doit rester naturel, respectueux et humoristique."},
@@ -121,7 +121,7 @@ function loadState(){try{const s=localStorage.getItem('n2s3');if(s)return JSON.p
     chatHistory:[],introComplete:false,chatBadge:0,lastView:'home',
     doneGages:[],phaseExcluded:[],waitingForOui:false,phase1Announced:false,
     waitingForDelete:false,doneDT:false,phase1Complete:false,pendingCC:null,
-    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,contractTimers:{},dtActive:false,dtStart:0,dtPoolBC:0,
+    pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,contractTimers:{},dtActive:false,dtStart:0,dtPoolBC:0,dtEnding:false,
   };}
 let S=loadState();
 function save(){try{localStorage.setItem('n2s3',JSON.stringify(S));}catch(e){}}
@@ -353,6 +353,8 @@ function drawMap(){const cv=document.getElementById('cv-map'),wrap=document.getE
 
 
 /* GAGES */
+let dtResumeCardInterval=null;
+let contractCardIntervals={};
 function renderGages(){
   const body=document.getElementById('gages-body');
   initPool();
@@ -522,13 +524,14 @@ function renderGages(){
 
   // DT resume live chrono (when overlay is closed but DT still running)
   const dtResumeChronoEl=document.getElementById('dt-resume-chrono');
+  if(dtResumeCardInterval){clearInterval(dtResumeCardInterval);dtResumeCardInterval=null;}
   if(dtResumeChronoEl&&S.dtActive&&!S.doneDT){
-    const dtTick2=setInterval(()=>{
-      const el=document.getElementById('dt-resume-chrono');if(!el){clearInterval(dtTick2);return;}
+    dtResumeCardInterval=setInterval(()=>{
+      const el=document.getElementById('dt-resume-chrono');if(!el){clearInterval(dtResumeCardInterval);dtResumeCardInterval=null;return;}
       const rem=Math.max(0,Math.floor(((S.dtStart+10*60*1000)-Date.now())/1000));
       const m=String(Math.floor(rem/60)).padStart(2,'0'),s=String(rem%60).padStart(2,'0');
       el.textContent=m+':'+s;
-      if(rem===0){clearInterval(dtTick2);endDoubleTrouble();}
+      if(rem===0){clearInterval(dtResumeCardInterval);dtResumeCardInterval=null;endDoubleTrouble();}
     },1000);
   }
   const dtLaunchBtn=document.getElementById('dt-launch-btn');
@@ -545,17 +548,18 @@ function renderGages(){
       openContractSelect(key,c);
     });
   });
-  // Contract: live countdowns (one interval per active contract card)
+  // Contract: live countdowns (one interval per active contract card, keyed to avoid duplicates)
   document.querySelectorAll('[data-ctimer]').forEach(el=>{
     const key=el.dataset.ctimer;
-    const ctI=setInterval(()=>{
+    if(contractCardIntervals[key]){clearInterval(contractCardIntervals[key]);delete contractCardIntervals[key];}
+    contractCardIntervals[key]=setInterval(()=>{
       const ct=S.contractTimers?.[key];
       const liveEl=document.querySelector(`[data-ctimer="${key}"]`);
-      if(!liveEl||!ct||!ct.active){clearInterval(ctI);return;}
+      if(!liveEl||!ct||!ct.active){clearInterval(contractCardIntervals[key]);delete contractCardIntervals[key];return;}
       const rem=Math.max(0,Math.ceil((ct.end-Date.now())/1000));
       const mm=String(Math.floor(rem/60)).padStart(2,'0'),ss=String(rem%60).padStart(2,'0');
       liveEl.textContent=mm+':'+ss;
-      if(rem===0){clearInterval(ctI);renderGages();}
+      if(rem===0){clearInterval(contractCardIntervals[key]);delete contractCardIntervals[key];renderGages();}
     },1000);
   });
   // Contract: claim buttons
@@ -1494,7 +1498,10 @@ function validateDTMission(smid){
 }
 
 function endDoubleTrouble(){
+  if(S.doneDT||S.dtEnding)return;
+  S.dtEnding=true;
   if(dtOverlayInterval)clearInterval(dtOverlayInterval);
+  if(dtResumeCardInterval){clearInterval(dtResumeCardInterval);dtResumeCardInterval=null;}
   const ol=document.getElementById('dt-ol');
   ol.classList.remove('hidden');
   document.getElementById('dt-missions-section').classList.add('hidden');
@@ -1520,7 +1527,7 @@ function endDoubleTrouble(){
     if(i>=endLines.length){
       setTimeout(()=>{
         R_KEYS.forEach(k=>{S.coins[k]=(S.coins[k]||0)+share;});
-        S.doneDT=true;S.dtActive=false;save();
+        S.doneDT=true;S.dtActive=false;S.dtEnding=false;save();
         ol.classList.add('hidden');
         renderGages();renderBraddy();
         checkPhase1Complete();
