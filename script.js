@@ -120,7 +120,7 @@ function loadState(){try{const s=localStorage.getItem('n2s3');if(s)return JSON.p
   return{phase:0,coins:{hippolyte:0,nathanael:0,teo:0},stock:JSON.parse(JSON.stringify(CFG.initStock)),
     chatHistory:[],introComplete:false,chatBadge:0,lastView:'home',
     doneGages:[],phaseExcluded:[],waitingForOui:false,phase1Announced:false,
-    waitingForDelete:false,doneDT:false,phase1Complete:false,pendingCC:null,
+    waitingForDelete:false,doneDT:false,phase1Complete:false,pendingCC:null,phase5Announced:false,
     pool:{},activeGages:[],gageHistory:[],usedEvents:[],usedSgIds:[],sideMissions:[],usedSMIds:[],brouillageEnd:0,primeNext:0,bradLostUntil:0,glitchModeUntil:0,contractTimers:{},dtActive:false,dtStart:0,dtPoolBC:0,dtEnding:false,
   };}
 let S=loadState();
@@ -188,6 +188,7 @@ function completeActiveGage(agIdx,status){
   S.activeGages.splice(agIdx,1);
   save();
   checkPhase1Complete();
+  checkPhase5Complete();
   renderGages();renderBraddy();
 }
 
@@ -242,6 +243,7 @@ function flash(dur=80,red=false){const el=document.getElementById(red?'fl-r':'fl
 function setPh(id){document.querySelectorAll('.ph').forEach(p=>p.classList.remove('on'));document.getElementById(id).classList.add('on');}
 function shake(px=5,ms=280){const end=Date.now()+ms;(function go(){if(Date.now()>end){document.body.style.transform='';return;}document.body.style.transform=`translate(${(Math.random()-.5)*px}px,${(Math.random()-.5)*px*.5}px)`;requestAnimationFrame(go);})();return wait(ms);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function normalizeFr(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
 
 
 /* TRANSITION */
@@ -622,6 +624,16 @@ function checkPhase1Complete(){
   if(allDone&&S.doneDT){
     S.phase1Complete=true;save();
     setTimeout(()=>{bradMsg("Bien. Le BRADDY3000 vient de recevoir un volume consequent de donnees — missions accomplies, coordonnees de terrain, resultats Double Trouble. Je transmets l'ensemble au systeme d'analyse central. Restez a l'ecoute : la Phase 2 se profile. En attendant — un Contrat BRADDY3000 est desormais deverouille dans la section Gages. Liaison Synchronisation. N'hesitez pas a y faire un tour. Ou pas. C'est vous qui voyez.");},2500);
+  }
+}
+
+function checkPhase5Complete(){
+  if(S.phase!==5||S.phase5Announced)return;
+  const ph5=PHASES[5];
+  const allDone=ph5.gages.every(g=>S.doneGages?.includes(g.id));
+  if(allDone){
+    S.phase5Announced=true;save();
+    setTimeout(()=>{bradMsg("Camarades... vous devriez venir voir ca. Le BRADDY3000 vient de localiser quelque chose. Quelque chose d'enorme. Envoyez-moi \"oulala je veux voir ca\" et je vous teleporte immediatement.");},2200);
   }
 }
 
@@ -1201,6 +1213,7 @@ function initApp(){try{
   document.getElementById('dt2-close-btn').addEventListener('click',()=>{document.getElementById('dt2-ol').classList.add('hidden');renderGages();});
   document.getElementById('dt2-cancel-btn').addEventListener('click',()=>document.getElementById('dt2-ol').classList.add('hidden'));
   document.getElementById('imposer-close').addEventListener('click',()=>document.getElementById('imposer-ol').classList.add('hidden'));
+  document.getElementById('final-finish-btn').addEventListener('click',()=>triggerSelfDestruct());
   showPage(S.lastView||'home');
 }catch(e){console.error('initApp crash:',e);}}
 
@@ -1312,6 +1325,13 @@ function sendMsg(){const inp=document.getElementById('chat-inp');const txt=inp.v
   if(txt.startsWith('/test.gage ')){const gid=txt.slice(11).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST ROULETTE — ${found.name}`);setTimeout(()=>openRoulette(found),300);}else addSysMsg(`Gage "${gid}" introuvable. (ex: p1g1, p2g3, p5g2)`);return;}
   if(txt.startsWith('/test.mission ')){const gid=txt.slice(14).trim();let found=null;PHASES.forEach(ph=>ph.gages?.forEach(g=>{if(g.id===gid)found=g;}));if(found){addSysMsg(`TEST MISSION — ${found.name}`);openMission(found,Math.floor(Math.random()*4));}else addSysMsg(`Gage introuvable.`);return;}
   const upper=txt.toUpperCase();if(CFG.phaseCodes[upper]!==undefined){advancePhase(CFG.phaseCodes[upper]);addSysMsg(`CODE VALIDE — Phase ${CFG.phaseCodes[upper]} deverouilee.`);return;}
+  // Teleportation finale (Phase 5 completee)
+  if(S.phase5Announced&&normalizeFr(txt).includes('oulala je veux voir ca')){
+    addUserMsg(txt);
+    bradMsg("Teleportation en cours... Le BRADDY3000 initie la connexion. Restez immobile.");
+    setTimeout(()=>openFinalVideoOverlay(),1800);
+    return;
+  }
   // sg3 pronostic detection
   if((S.activeGages||[]).some(ag=>ag.gageId==='sg3')&&/\d+\s*-\s*\d+/.test(txt)){
     addUserMsg(txt);
@@ -1560,6 +1580,92 @@ function launchResetAnimation(){
   let i=0;
   const next=()=>{if(i>=lines.length){setTimeout(()=>{localStorage.removeItem('n2s3');S=loadState();location.reload();},900);return;}const p=document.createElement('p');p.textContent=lines[i];p.style.cssText='color:rgba(0,255,65,.8);font-size:11px;letter-spacing:.25em;margin:3px 0;opacity:0;transition:opacity .15s;';ov.insertBefore(p,ov.firstChild);setTimeout(()=>p.style.opacity='1',20);beep(180+Math.random()*200,.05,.05,'square');i++;setTimeout(next,lines[i-1].startsWith('> .')?350:300);};
   flash(300,true);setTimeout(next,500);
+}
+
+/* FINAL VIDEO — teleportation Phase 5 */
+let ytApiLoading=false;
+let ytPlayerFinal=null;
+
+function loadYTApiIfNeeded(cb){
+  if(window.YT&&window.YT.Player){cb();return;}
+  if(ytApiLoading){
+    const prev=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{if(prev)prev();cb();};
+    return;
+  }
+  ytApiLoading=true;
+  const tag=document.createElement('script');
+  tag.src='https://www.youtube.com/iframe_api';
+  document.body.appendChild(tag);
+  window.onYouTubeIframeAPIReady=()=>cb();
+}
+
+function openFinalVideoOverlay(){
+  const ol=document.getElementById('final-ol');
+  if(!ol)return;
+  ol.classList.remove('hidden');
+  flash(200,true);glitchSnd(.2);shake(5,350);
+  const container=document.getElementById('final-yt-container');
+  container.innerHTML='<div id="final-yt-player"></div>';
+  loadYTApiIfNeeded(()=>{
+    try{
+      ytPlayerFinal=new YT.Player('final-yt-player',{
+        videoId:'SLug5Gss8no',
+        width:'100%',height:'100%',
+        playerVars:{autoplay:1,rel:0,modestbranding:1},
+        events:{
+          onStateChange:(e)=>{
+            if(e.data===YT.PlayerState.ENDED){triggerSelfDestruct();}
+          }
+        }
+      });
+    }catch(err){console.error('YT player error:',err);}
+  });
+}
+
+function triggerSelfDestruct(){
+  const finalOl=document.getElementById('final-ol');
+  if(finalOl)finalOl.classList.add('hidden');
+  if(ytPlayerFinal){try{ytPlayerFinal.stopVideo();}catch(e){}}
+  document.body.style.overflow='hidden';
+  let shakes=0;
+  const shakeInterval=setInterval(()=>{
+    shakes++;
+    const dx=(Math.random()-.5)*70;
+    document.body.style.transform=`translateX(${dx}px)`;
+    if(Math.random()>.35)flash(70,Math.random()>.5);
+    glitchSnd(.22);
+    if(shakes>=16){
+      clearInterval(shakeInterval);
+      document.body.style.transform='';
+      showBlackoutMessage();
+    }
+  },120);
+}
+
+function showBlackoutMessage(){
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;z-index:900;background:#000;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .7s;';
+  document.body.appendChild(ov);
+  void ov.offsetWidth;
+  ov.style.opacity='1';
+  setTimeout(()=>{
+    const p=document.createElement('p');
+    p.textContent="> Merci d'avoir fait cette aventure.";
+    p.style.cssText='font-family:var(--mono);font-size:15px;color:#00ff41;letter-spacing:.2em;text-align:center;opacity:0;transition:opacity 1.3s;padding:0 30px;';
+    ov.appendChild(p);
+    void p.offsetWidth;
+    p.style.opacity='1';
+    beep(440,.5,.08,'sine');
+    setTimeout(()=>{
+      p.style.opacity='0';
+      ov.style.opacity='0';
+      setTimeout(()=>{
+        localStorage.removeItem('n2s3');
+        location.reload();
+      },1400);
+    },4200);
+  },800);
 }
 
 /* BOOTSTRAP */
